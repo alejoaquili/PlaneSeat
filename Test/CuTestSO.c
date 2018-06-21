@@ -1,231 +1,142 @@
 #include <stdio.h>
-#include "CuTest.h"
-#include "messageQueue.h"
-#include "errorslib.h"
+#include "./../Database/include/dataBaseADT.h"
+#include "include/CuTest.h"
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/mman.h> 
 #include <fcntl.h>
-#include "CuTestSO.h"
-#include <mqueue.h>
+#include "include/CuTestSO.h"
 #include "string.h"
-#include "sharedMemory.h"
+
+void testCreateDb(CuTest* tc);
+void testInserInDb(CuTest* tc);
+
+void givenADbName();
+void givenADb();
+void givenATuppleToInsert();
+
+int whenDbIsCreated(char * dnName);
+int whenTuppleIsInserted(dataBaseADT db, char* tuppleNameForInsertion);
+
 
 /*-----------------------------------
- variables for message queue testing
+ variables for db testing
  ------------------------------------
 */
-long maxQueuedMessages = 2;
-long currentQueuedMessages = 0;
-long maxMessageSize = 256;
-long messageQueueFlags = O_RDWR;
-char* name = "/test1";
-char* message;
-int messageLength = 8;
+char * dbNameForTest = "dbTest";
+char * dbName;
+dataBaseADT db;
 
-messageQueueADT mq;
+//------------------------------------
+
+
+
+
+/*-----------------------------------
+ variables for query testing
+ ------------------------------------
+*/
+char * tableName = "COMPANY";
 //------------------------------------
 
 
 
 /*
 --------------------------------------
-variables for shared memory testing
+variables for insert testing
 --------------------------------------
 */
 
-sharedMemoryADT sharedMemory;
-int sharedMemoryId;
-long sharedMemoryFlags = O_RDWR;
-long sharedMemorySize = 256;
+char * exampleTuppleForInsertion = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "  \
+         "VALUES (17, 'Paul', 33, 'California', 20000.00 ); " \
+		;
 
-char * sharedMemoryMessage = "testing";
-long sharedMemoryMessageLength = 8;
+char* tuppleNameForInsertion;
+//------------------------------------
+
+
+/*-----------------------------------
+ variables for insert testing
+ ------------------------------------
+*/
+
 
 //------------------------------------
 
 
 
-void testCreateMessageQueue(CuTest* tc)
+
+
+void testCreateDb(CuTest* tc)
 {
-	CuAssert(tc,"Fail to create a message queue", whenAMessageQueueCreated());
-	closeMQ(mq);
+	givenADbName();
+	CuAssert(tc,"Fail to create a db", whenDbIsCreated(dbName));
 }
 
-void testQueueMessage(CuTest* tc)
+void testInserInDb(CuTest* tc)
 {
-
-	givenAMessageQueue();
-	givenAMessage();
-	CuAssert(tc, "Fail to queue a message ", whenMessageQueued());
-	closeMQ(mq);
-}
-
-void testQueueOpen(CuTest* tc)
-{
-	givenAMessageQueue();
-	CuAssert(tc, "Fail to open an existing queue", whenOpenMessageQueue());
-	closeMQ(mq);
-
+	givenADbName();
+	givenADb();
+	givenATuppleToInsert();
+    
+	CuAssert(tc,"Fail to insert a tupple", whenTuppleIsInserted(db,tuppleNameForInsertion));
 }
 
 
-void testSharedMemoryCreation(CuTest* tc)
+
+
+void givenADbName()
 {
-	givenAnId();
-	CuAssert(tc, " Fail to create a shared memory", whenSharedMemoryCreated());
-	deleteShMem(sharedMemory);
+	dbName = dbNameForTest;
 }
 
-
-void testSharedMemoryOpen(CuTest* tc)
+void givenADb()
 {
-	givenASharedMemory();
-	CuAssert(tc, "Fail to open an existing shared memory", whenSharedMemoryOpened());
-	deleteShMem(sharedMemory);
-
+	db = openDataBase(dbName);
 }
 
-void testReadWriteSharedMemory(CuTest* tc)
+void givenATuppleToInsert()
 {
-	//givenASharedMemory();
-	CuAssert(tc, "Fail Read or Write operation", whenSharedMemoryWrittenaAndRead());
-	deleteShMem(sharedMemory);	
+	tuppleNameForInsertion = exampleTuppleForInsertion;
 }
 
 
 
 
 
-void givenAnId()
+int whenDbIsCreated(char * dnName)
 {
-	sharedMemoryId = getpid();
+	db = createDataBase(dbName, false);
+	return !checkIfNull(db, "db creation fail");
 }
 
-void givenASharedMemory()
+int whenTuppleIsInserted(dataBaseADT db, char* tuppleNameForInsertion)
 {
-	givenAnId();
-	sharedMemory = sharedMemoryCreator(sharedMemoryId, sharedMemorySize,
-		sharedMemoryFlags);
-}
-
-void givenAMessage()
-{
-	message = "testing";
-	enqueueMessage(mq, message);
-}
-
-
-void givenAMessageQueue()
-{
-	mq = messageQueueCreator(name,messageQueueFlags,maxQueuedMessages, 
-		maxMessageSize);
-}
-
-
-
-int whenSharedMemoryWrittenaAndRead()
-{
-	pid_t child = fork();
-	if(child == 0)
-	{
-		sharedMemoryADT shm = sharedMemoryCreator(sharedMemoryId, sharedMemorySize,
-		sharedMemoryFlags);
-		writeShMem(shm, sharedMemoryMessage, sharedMemoryMessageLength);
-		closeShMem(shm);
-		exit(0);
-
-	}
-	else
-	{
-		wait(NULL);
-		sharedMemoryADT shm2 = openShMem(sharedMemoryId, O_RDONLY);
-		char readMessage[sharedMemoryMessageLength];
-		readShMem(shm2, readMessage, sharedMemoryMessageLength);
-		int response = 1;
-		if(strcmp(readMessage, sharedMemoryMessage) != 0)
-			response = 0;
-		return response;
-	}	
-
-	return 0;
+	return executeQueryDataBase(db,tuppleNameForInsertion,
+	true);
 
 }
-
-
-
-int whenSharedMemoryOpened()
-{
-	sharedMemoryADT testSharedmemory =  openShMem(sharedMemoryId, sharedMemoryFlags);
-	if(getShMemId(testSharedmemory) != getShMemId(sharedMemory))
-		return 0;
-
-	return 1;
-}
-
-int whenSharedMemoryCreated()
-{
-	sharedMemory =  sharedMemoryCreator(sharedMemoryId, sharedMemorySize,
-		sharedMemoryFlags);
-	if(sharedMemory == NULL)
-		return 0;
-
-	return 1;
-
-}
-
-int whenOpenMessageQueue()
-{
-	if((void*)0 == openMQ(name, messageQueueFlags))
-		return 0;
-
-	return 1;
-}
-
-
-int whenAMessageQueueCreated()
-{
-	mq = messageQueueCreator(name,messageQueueFlags,maxQueuedMessages,
-	 maxMessageSize);
-	if(mq == (void*) 0)
-		return 0;
-
-	return 1;
-}
-
-int whenMessageQueued()
-{
-	char* messageRecieved = malloc( messageLength*sizeof(char) );
-	readMessage(mq, messageRecieved, NULL);
-	int response = 1;
-	if(strcmp(message, messageRecieved) != 0 )
-		response = 0;
-
-	//free(messageRecieved); no se porque tira error
-	return response;
-}
-
-
-
-
-
-
-
-
 
 
 CuSuite* CuQueueGetSuite(void)
 {
 	CuSuite* suite = CuSuiteNew();
 
-	SUITE_ADD_TEST(suite, testCreateMessageQueue);
-	SUITE_ADD_TEST(suite, testQueueMessage);
-	SUITE_ADD_TEST(suite, testQueueOpen);
-	SUITE_ADD_TEST(suite, testSharedMemoryCreation);
-	SUITE_ADD_TEST(suite, testSharedMemoryOpen);
-	SUITE_ADD_TEST(suite, testReadWriteSharedMemory);
+	SUITE_ADD_TEST(suite, testCreateDb);
+	
 	return suite;
+}
+
+
+
+// funciones para llevar a otro luagar
+
+int checkIfNull(void * pointer, char* errorMessage)
+{
+	if(pointer == NULL)
+	{
+		printf("Null pointer error: %s", errorMessage);
+		return true;
+	}
+
+	return false;
 }
