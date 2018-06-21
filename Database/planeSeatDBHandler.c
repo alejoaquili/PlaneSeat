@@ -22,7 +22,7 @@ static	char * createFlightSeatsTableQuery = "CREATE TABLE flightSeats(" \
         "flightNumber   TEXT," \
         "colLetter      CHAR(1)," \
         "rowNumber      INTEGER," \
-        "occupied    BOOLEAN," \
+        "occupied    INTEGER," \
         "PRIMARY KEY(flightNumber, colLetter, rowNumber)," \
         "FOREIGN KEY(flightNumber) REFERENCES flight ON DELETE CASCADE);";
 	
@@ -98,7 +98,7 @@ int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int r
 
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
-    sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %s);", flightNumber, colLetter, rowNumber, "true");
+    sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %d);", flightNumber, colLetter, rowNumber, true);
     int result = executeQueryDataBase(db, newQuery, false);
     if(result < 0)
         return -1;
@@ -134,6 +134,16 @@ int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char c
     return executeQueryDataBase(db, newQuery, false);
 }
 
+int getFlights()
+{
+
+}
+
+int getFlightSeatsDistribution()
+{
+
+}
+
 static int createTables(dataBaseADT db)
 {
     if(db == NULL)
@@ -154,7 +164,7 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
         for(int j = 1 ; j < ROW_NUMBER; i++)
         {
             memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
-            sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %s);", flightNumber, (char)i, j, "false");
+            sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %d);", flightNumber, (char)i, j, false);
             result += executeQueryDataBase(db, newQuery, false);
             if(result < 0)
                 return result;
