@@ -22,7 +22,7 @@ void bindToPort(int socketFd, int port)
     if(setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int) == -1))
     	perror("setsockopt(): cannot reuse the socket");
     int result = bind(socket, (struct sockaddr *) &inAddress, sizeof(inAddress));
-    if(c < 0)
+    if(result < 0)
     	perror("bind(): the port is currently in use");
 }
 
