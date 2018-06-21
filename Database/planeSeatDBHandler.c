@@ -8,6 +8,8 @@
 #define TOTAL_SEATS COL_NUMBER * ROW_NUMBER
 #define COL_NUMBER 8
 #define ROW_NUMBER 30
+#define COL_MIN_LETTER 'a'
+
 
 static	char * createFlightTableQuery = "CREATE TABLE flight(" \
         "flightNumber   TEXT," \
@@ -45,7 +47,7 @@ static char * insertReservationFmt = "INSERT INTO reservation (flightNumber, use
 static int insertReservationFmtSize = 0;
 
 static int createTables(dataBaseADT db);
-
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber);
 
 
 dataBaseADT createDataBase(void)
@@ -94,8 +96,9 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
 
 int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId);
 {
-    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < 'a' || colLetter > 'a'+ COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
+    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber))
         return -1;
+
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
     sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %s);", flightNumber, colLetter, rowNumber, "true");
@@ -131,4 +134,11 @@ static int createTables(dataBaseADT db)
     result += executeQueryDataBase(db, createFlightSeatsTableQuery, false);
     result += executeQueryDataBase(db, createReservationTableQuery, false);
     return result;
+}
+
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber)
+{
+    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter > COL_MIN_LETTER+ COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
+        return 0;
+    return 1
 }
