@@ -11,6 +11,20 @@
 #define TOTAL_SEATS COL_NUMBER * ROW_NUMBER
 #define COL_MIN_LETTER 'a'
 
+typedef struct flight_t {
+    char * flightNumber;
+    char * origin;
+    char * destination;
+} flight_t;
+
+typedef struct flightSeat_t{
+    char * flightNumber;
+    char colLetter;
+    int rowNumber;
+    boolean occupied;
+} flightSeat_t;
+
+
 
 static	char * createFlightTableQuery = "CREATE TABLE flight(" \
         "flightNumber   TEXT," \
@@ -134,12 +148,12 @@ int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char c
     return executeQueryDataBase(db, newQuery, false);
 }
 
-int getFlights()
+flight_t * getFlights(void)
 {
-
+    
 }
 
-int getFlightSeatsDistribution()
+flightSeat_t * getFlightSeatsDistribution(char * flightNumber)
 {
 
 }
