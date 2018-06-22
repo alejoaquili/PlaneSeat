@@ -5,24 +5,38 @@
 #define DB_NAME "planeSeat"
 #define MAX_QUERY_LENGTH 512
 
-#define TOTAL_SEATS COL_NUMBER * ROW_NUMBER
+
 #define COL_NUMBER 8
 #define ROW_NUMBER 30
+#define TOTAL_SEATS COL_NUMBER * ROW_NUMBER
 #define COL_MIN_LETTER 'a'
+
+typedef struct flight_t {
+    char * flightNumber;
+    char * origin;
+    char * destination;
+} flight_t;
+
+typedef struct flightSeat_t{
+    char * flightNumber;
+    char colLetter;
+    int rowNumber;
+    boolean occupied;
+} flightSeat_t;
+
 
 
 static	char * createFlightTableQuery = "CREATE TABLE flight(" \
         "flightNumber   TEXT," \
         "origin         TEXT," \
         "destination    TEXT," \
-        "freeSeats      INTEGER," \
         "PRIMARY KEY(flightNumber));";
 
 static	char * createFlightSeatsTableQuery = "CREATE TABLE flightSeats(" \
         "flightNumber   TEXT," \
         "colLetter      CHAR(1)," \
         "rowNumber      INTEGER," \
-        "occupied    BOOLEAN," \
+        "occupied    INTEGER," \
         "PRIMARY KEY(flightNumber, colLetter, rowNumber)," \
         "FOREIGN KEY(flightNumber) REFERENCES flight ON DELETE CASCADE);";
 	
@@ -34,7 +48,7 @@ static	char * createReservationTableQuery = "CREATE TABLE reservation(" \
         "PRIMARY KEY(flightNumber, userId, colLetter, rowNumber)," \
         "FOREIGN KEY(flightNumber) REFERENCES flight ON DELETE CASCADE);";
 
-static char * insertFlightFmt = "INSERT INTO flight (flightNumber, origin, destination, freeSeats) VALUES(";
+static char * insertFlightFmt = "INSERT INTO flight (flightNumber, origin, destination) VALUES(";
 
 static int insertFlightFmtSize = 0;
 
@@ -46,8 +60,21 @@ static char * insertReservationFmt = "INSERT INTO reservation (flightNumber, use
 
 static int insertReservationFmtSize = 0;
 
+static char * deleteFromFlightFmt = "DELETE FROM flight WHERE flightNumber = ";
+
+static int deleteFromFlightFmtSize = 0;
+
+static char * deleteFromFlightSeatsFmt = "DELETE FROM flightSeats WHERE flightNumber = ";
+
+static int deleteFromFlightSeatsFmtSize = 0;
+
+static char * deleteFromReservationFmt = "DELETE FROM reservation WHERE flightNumber = ";
+
+static int deleteFromReservationFmtSize = 0;
+
 static int createTables(dataBaseADT db);
-static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber);
+static int addNewFlightSeats(dataBaseADT db, char * flightNumber);
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char *  userId);
 
 
 dataBaseADT createDataBase(void)
@@ -58,16 +85,19 @@ dataBaseADT createDataBase(void)
     insertFlightFmtSize = strlen(insertFlightFmt);
     insertFlightSeatsFmtSize = strlen(insertFlightSeatsFmt);
     insertReservationFmtSize = strlen(insertReservationFmt);
+    deleteFromFlightFmtSize = strlen(deleteFromFlightFmt);
+    deleteFromFlightSeatsFmtSize = strlen(deleteFromFlightSeatsFmt);
+    deleteFromReservationFmtSize = strlen(deleteFromReservationFmt);
     return 0;
 }
 
 int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * destination)
 {
-    if(flightNumber == NULL || origin == NULL || destination == NULL || freeSeats <= 0)
+    if(flightNumber == NULL || origin == NULL || destination == NULL)
         return -1;
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, insertFlightFmt, insertFlightFmtSize);
-    sprintf(newQuery + insertFlightFmtSize, "%s, %s, %s, %d);", flightNumber, origin, destination, TOTAL_SEATS);
+    sprintf(newQuery + insertFlightFmtSize, "%s, %s, %s);", flightNumber, origin, destination);
     int result = executeQueryDataBase(db, newQuery, false);
     if(result < 0)
         return -1;
@@ -75,52 +105,55 @@ int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * dest
     return result;
 }
 
-static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
-{
-    char newQuery[MAX_QUERY_LENGTH];
-    int result = 0;
-    for(int i = (int)'a'; i < COL_NUMBER ; i++)
-    {
-        for(int j = 1 ; j < ROW_NUMBER; i++)
-        {
-            memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
-            sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %s);", flightNumber, (char)i, j, "false");
-            result += executeQueryDataBase(db, newQuery, false);
-            if(result < 0)
-                return result;
-            memset(newQuery, 0, MAX_QUERY_LENGTH);
-        }
-    }
-    return result;
-}
-
 int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId);
 {
-    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber))
+    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber, userId))
         return -1;
 
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
-    sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %s);", flightNumber, colLetter, rowNumber, "true");
+    sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %d);", flightNumber, colLetter, rowNumber, true);
     int result = executeQueryDataBase(db, newQuery, false);
     if(result < 0)
         return -1;
     memset(newQuery, 0, MAX_QUERY_LENGTH);
     memcpy(newQuery, insertReservationFmt, insertReservationFmtSize);
     sprintf(newQuery + insertReservationFmtSize, "%s, %s, %c, %d);", flightNumber, userId, colLetter, rowNumber);
-    result = executeQueryDataBase(db, newQuery, false);
-    if(result < 0)
-        return -1;
-    memset(newQuery, 0, MAX_QUERY_LENGTH);
-    memcpy(newQuery, , );
+    return executeQueryDataBase(db, newQuery, false);
 }
 
 int deleteFligth(dataBaseADT db, char * flightNumber)
 {
-
+    if(db == NULL || flightNumber == NULL)
+        return -1;
+    char newQuery[MAX_QUERY_LENGTH];
+    memcpy(newQuery, deleteFromFlightFmt, deleteFromFlightFmtSize);
+    sprintf(newQuery + deleteFromFlightFmtSize, "%s ;", flightNumber);
+    int result = executeQueryDataBase(db, newQuery, false);
+    if(result < 0)
+        return -1;
+    memset(newQuery, 0, MAX_QUERY_LENGTH);
+    memcpy(newQuery, deleteFromFlightSeatsFmt, deleteFromFlightSeatsFmtSize);
+    sprintf(newQuery + deleteFromFlightSeatsFmtSize, "%s ;", flightNumber);
+    return executeQueryDataBase(db, newQuery, false);
 }
 
-int deleteReservation(dataBaseADT, char * flightNumber, char colLetter, int rowNumber)
+int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber)
+{
+    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber, userId))
+        return -1;
+    char newQuery[MAX_QUERY_LENGTH];
+    memcpy(newQuery, deleteFromReservationFmt, deleteFromReservationFmtSize);
+    sprintf(newQuery + deleteFromReservationFmtSize, "%s AND userId = %s AND colLetter = %c AND rowNumber = %d;", flightNumber, userId, colLetter, rowNumber);
+    return executeQueryDataBase(db, newQuery, false);
+}
+
+flight_t * getFlights(void)
+{
+    
+}
+
+flightSeat_t * getFlightSeatsDistribution(char * flightNumber)
 {
 
 }
@@ -136,7 +169,26 @@ static int createTables(dataBaseADT db)
     return result;
 }
 
-static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber)
+static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
+{
+    char newQuery[MAX_QUERY_LENGTH];
+    int result = 0;
+    for(int i = (int)'a'; i < COL_NUMBER ; i++)
+    {
+        for(int j = 1 ; j < ROW_NUMBER; i++)
+        {
+            memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
+            sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %d);", flightNumber, (char)i, j, false);
+            result += executeQueryDataBase(db, newQuery, false);
+            if(result < 0)
+                return result;
+            memset(newQuery, 0, MAX_QUERY_LENGTH);
+        }
+    }
+    return result;
+}
+
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId)
 {
     if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter > COL_MIN_LETTER+ COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
         return 0;

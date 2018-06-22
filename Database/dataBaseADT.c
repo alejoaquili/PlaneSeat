@@ -4,11 +4,17 @@
 #include <string.h>
 #include <sqlite3.h> 
 
+#define READY_ROW SQLITE_ROW
+
+#define DONE SQLITE_DONE
+
+
 typedef struct dataBaseCDT
 {
     sqlite3 * db;
     char * errorMessage;
     int returnCode;
+    sqlite3_stmt * statement;
 }dataBaseCDT;
 
 static int callBackShow(void * notUsed, int argc, char ** argv, char ** colName) 
@@ -32,6 +38,7 @@ dataBaseADT createDataBase(char * dBName, boolean foreignKey)
         printf("Creating an in-memory database in RAM that lasts only for the duration of the session.\n");
 
     dataBase->errorMessage = NULL;
+    dataBase->statement = NULL;
     dataBase->returnCode = sqlite3_open(dBName, &dataBase->db);
 
     if(dataBase->returnCode) 
@@ -101,5 +108,96 @@ int executeQueryDataBase(dataBaseADT dataBase, const char * query, boolean showQ
         return 1;
     }
     return 0;
+}
+
+int prepareStatement(dataBaseADT dataBase, char *  query)
+{
+    if(dataBase == NULL || query == NULL)
+    {
+        fprintf(stderr, "prepareStatement():Invalid Arguments");
+        return -1;
+    }
+    sqlite3_prepare_v2(dataBase->db, query, -1, &dataBase->statement, NULL);
+    return 0;
+}
+
+int finalizeStatement(dataBaseADT dataBase)
+{
+    if(dataBase == NULL || dataBase->statement == NULL)
+    {
+        fprintf(stderr, "finalizeStatement():Invalid Arguments");
+        return -1;
+    }
+    return sqlite3_finalize(dataBase->statement);
+}
+
+int stepStatement(dataBaseADT dataBase)
+{
+    if(dataBase == NULL || dataBase->statement == NULL)
+    {
+        fprintf(stderr, "stepStatement():Invalid Arguments");
+        return -1;
+    }
+    return sqlite3_step(dataBase->statement);
+}
+
+int getColumnsCountOfAStatement(dataBaseADT dataBase)
+{
+    if(dataBase == NULL || dataBase->statement == NULL)
+    {
+        fprintf(stderr, "stepStatement():Invalid Arguments");
+        return -1;
+    }
+    return sqlite3_column_count(dataBase->statement);
+}
+
+int getIntFromColumn(dataBaseADT dataBase, int col, int * ret)
+{
+    if(dataBase == NULL)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return -1;
+    }
+    int maxCol = getColumnsCountOfAStatement(dataBase);
+    if(col >= maxCol || sqlite3_column_type(dataBase->statement, col) != SQLITE_INTEGER)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return -1;
+    }
+    *ret = sqlite3_column_int(dataBase->statement, col);
+    return 0;
+}
+
+int getCharFromColumn(dataBaseADT dataBase, int col, char * ret)
+{
+    if(dataBase == NULL)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return -1;
+    }
+    int maxCol = getColumnsCountOfAStatement(dataBase);
+    if(col >= maxCol || sqlite3_column_type(dataBase->statement, col) != SQLITE_TEXT)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return -1;
+    }
+    *ret = sqlite3_column_int(dataBase->statement, col);
+    return 0;
+}
+
+char * getTextFromColumn(dataBaseADT dataBase, int col)
+{
+    if(dataBase == NULL)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return NULL;
+    }
+    int maxCol = getColumnsCountOfAStatement(dataBase);
+    if(col >= maxCol || sqlite3_column_type(dataBase->statement, col) != SQLITE_TEXT)
+    {
+        fprintf(stderr, "getIntFromColumn():Invalid Arguments");
+        return NULL;
+    }
+    return (char *)sqlite3_column_text(dataBase->statement, col);
 }
 
