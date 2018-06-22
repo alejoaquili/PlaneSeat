@@ -35,3 +35,4 @@ void checkAreEquals(int aNumber, int otherNumber, char * msg)
 	if(aNumber != otherNumber)
 		fail(msg);
 }
+

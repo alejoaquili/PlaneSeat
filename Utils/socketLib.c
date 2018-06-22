@@ -1,8 +1,7 @@
-#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "socketLib.h"
-
+#include <errno.h>
+#include "socketlib.h"
 
 int openSocket(void)
 {
@@ -21,7 +20,7 @@ void bindToPort(int socketFd, int port)
     int reuse = 1;
     if(setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int) == -1))
     	perror("setsockopt(): cannot reuse the socket");
-    int result = bind(socket, (struct sockaddr *) &inAddress, sizeof(inAddress));
+    int result = bind(socketFd, (struct sockaddr *) &inAddress, sizeof(inAddress));
     if(result < 0)
     	perror("bind(): the port is currently in use");
 }
@@ -36,3 +35,4 @@ int acceptClientSocket(int socketFd)
 		perror("accept() Failed");
 	return acceptClientSocketFd;
 }
+

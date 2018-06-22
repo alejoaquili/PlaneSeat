@@ -6,12 +6,14 @@
 #include <signal.h>
 #include <semaphore.h>
 #include <netinet/in.h>
+#include "socketlib.h"
+#include "errorslib.h"
+#include "server.h"
 
-#define CONNECTIONS_QTY 2
 #define SEM_NAME "conectionsSemaphore"
-#define PORT 7200
 
 void sigChildHandler(int sig);
+void sigEndHandler(int sig);
 
 static int listenFd;
 static sem_t * semaphore;
@@ -70,3 +72,4 @@ void sigEndHandler(int sig)
     close(listenFd);
     return;
 }
+

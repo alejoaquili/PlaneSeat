@@ -5,8 +5,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define PORT_NUMBER 7200
+#define PORT 7200
 #define IP "127.0.0.1"
+
+int connectClientToSocket(void);
 
 int main (void)
 {
@@ -24,7 +26,7 @@ int connectClientToSocket(void)
 	}
 	struct sockaddr_in inAddress;
 	inAddress.sin_family = AF_INET;
-	inAddress.sin_port = htons(PORT_NUMBER);
+	inAddress.sin_port = htons(PORT);
 	inAddress.sin_addr.s_addr = inet_addr(IP);
 	int result = connect(clientSocketFd, (struct sockaddr *)& inAddress, sizeof(inAddress));
 	if(result < 0)
@@ -35,3 +37,4 @@ int connectClientToSocket(void)
 	}
 	return clientSocketFd;
 }
+
