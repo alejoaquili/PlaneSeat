@@ -100,7 +100,8 @@ int executeQueryDataBase(dataBaseADT dataBase, const char * query, boolean showQ
         return -1;
     if(showQuery)
         dataBase->returnCode = sqlite3_exec(dataBase->db, query, callBackShow, 0, &(dataBase->errorMessage));
-    dataBase->returnCode = sqlite3_exec(dataBase->db, query, callBackNotShow, 0, &(dataBase->errorMessage));
+    else
+        dataBase->returnCode = sqlite3_exec(dataBase->db, query, callBackNotShow, 0, &(dataBase->errorMessage));
     if(dataBase->returnCode != SQLITE_OK)
     {
         fprintf(stderr, "SQL error: %s\n", dataBase->errorMessage);

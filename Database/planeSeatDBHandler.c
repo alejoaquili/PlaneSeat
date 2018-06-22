@@ -148,14 +148,67 @@ int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char c
     return executeQueryDataBase(db, newQuery, false);
 }
 
-flight_t * getFlights(void)
+flight_t * getFlights(dataBaseADT db, int * qty)
 {
-    
+    if(db == NULL || qty == NULL)
+        return NULL;
+    char * query = "SELECT COUNT(*) FROM flight;";
+    prepareStatement(db, query);
+    int rowQty = 0;
+    getIntFromColumn(db, 0, &rowQty);
+    finalizeStatement(db);
+    flight_t * flights = malloc(rowQty * sizeof(flight_t));
+    char * newQuery = "SELECT * FROM flight;";
+    prepareStatement(db, newQuery);
+    int i = 0;
+    while(stepStatemen(db) == 100)
+    {
+        flights[i].flightNumber = getTextFromColumn(db, 0);
+        flights[i].origin = getTextFromColumn(db, 1);
+        flights[i].destination = getTextFromColumn(db, 2);
+        i++;
+    }
+    finalizeStatement(db);
+    *qty = rowQty;
+    return flights; //hay q acordarse de hacer el free!!!!
 }
 
-flightSeat_t * getFlightSeatsDistribution(char * flightNumber)
+flightSeat_t * getFlightSeatsDistribution(dataBaseADT db, char * flightNumber, int * qty)
 {
-
+    if(db == NULL || flightNumber == NULL || qty == NULL)
+        return NULL;
+    char query[MAX_QUERY_LENGTH];
+    sprintf(query, "SELECT COUNT(*) FROM flightSeats WHERE flightNumber = %s;", flightNumber); 
+    prepareStatement(db, query);
+    int rowQty = 0;
+    getIntFromColumn(db, 0, &rowQty);
+    finalizeStatement(db);
+    flightSeat_t * flightSeatDistribution = malloc(rowQty * sizeof(flightSeat_t));
+    char newQuery[MAX_QUERY_LENGTH];
+    sprintf(newQuery, "SELECT * FROM flight WHERE flightNumber = %s;", flightNumber);
+    prepareStatement(db, newQuery);
+    int i = 0, rowNumber, occupied;
+    char colLetter;
+    while(stepStatement(db) == 100)
+    {
+        colLetter = 0;
+        rowNumber = 0;
+        occupied = 0;
+        flightSeatDistribution[i].flightNumber = getTextFromColumn(db, 0);
+        if(getCharFromColumn(db, 1, &colLetter) < 0)
+            return NULL;
+        flightSeatDistribution[i].colLetter = colLetter;
+        if(getIntFromColumn(db, 2, &rowNumber) < 0)
+            return NULL;
+        flightSeatDistribution[i].rowNumber = rowNumber;
+        if(getIntFromColumn(db, 3, &occupied) < 0)
+            return NULL;
+        flightSeatDistribution[i].occupied = occupied;
+        i++;
+    }
+    finalizeStatement(db);
+    *qty = rowQty;
+    return flightSeatDistribution; //hay q acordarse de hacer free!
 }
 
 static int createTables(dataBaseADT db)
@@ -190,7 +243,7 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
 
 static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId)
 {
-    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter > COL_MIN_LETTER+ COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
+    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter > COL_MIN_LETTER + COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
         return 0;
-    return 1
+    return 1;
 }
