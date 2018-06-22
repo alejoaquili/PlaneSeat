@@ -20,5 +20,5 @@ flightNumber 	TEXT,
 userId 			TEXT,
 rowLetter 		CHAR(1) NOT NULL,
 colNumber 		INTEGER NOT NULL,
-PRIMARY KEY(flightNumber, userId, rowLetter, colNumber),
+PRIMARY KEY(flightNumber, rowLetter, colNumber),
 FOREIGN KEY(flightNumber) REFERENCES flight ON DELETE CASCADE);

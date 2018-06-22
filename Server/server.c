@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <semaphore.h>
-#include <netinet/in.h>
 #include "socketlib.h"
 #include "errorslib.h"
 #include "server.h"
@@ -28,11 +27,9 @@ int main(int argc , char *argv[])
 
     listenFd = openSocket();
     checkFail(listenFd, "Error in listener\n");
-    
     bindToPort(listenFd, PORT);
     checkFail(listen(listenFd, 10) == -1, "Unable to linten in this port\n");
-    printf("Port binded");
-    
+
     while(1)
     {
         int connectFd = acceptClientSocket(listenFd);
@@ -43,7 +40,6 @@ int main(int argc , char *argv[])
             case 0:
                 close(listenFd);
                 sem_close(semaphore);
-                printf("Conexion aceptada\n");
                 execlp(CONECTION_HANDLER, " ", ((char *)NULL));
 
                 fail("exec() Failed");
@@ -64,7 +60,6 @@ void sigChildHandler(int sig)
     while(waitpid(-1, 0, WNOHANG) > 0);
     return;
 }
-
 
 void sigEndHandler(int sig)
 {

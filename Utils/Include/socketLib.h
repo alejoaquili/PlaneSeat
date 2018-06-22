@@ -7,5 +7,7 @@ void bindToPort(int socketFd, int port);
 
 int acceptClientSocket(int socketFd);
 
+int connectClientToSocket(int clientSocketFd, int port, char * ip);
+
 #endif
 
