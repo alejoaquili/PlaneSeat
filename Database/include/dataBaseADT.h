@@ -27,7 +27,7 @@ int getColumnsCountOfAStatement(dataBaseADT dataBase);
 
 int getIntFromColumn(dataBaseADT dataBase, int col, int * ret);
 
-int getCharFromColumn(dataBaseADT dataBase, int col, char * ret);
+int getCharFromColumn(dataBaseADT dataBase, int col);
 
 char * getTextFromColumn(dataBaseADT dataBase, int col);
 

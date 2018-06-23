@@ -1,11 +1,7 @@
 #include <stdio.h>
-#include "stdlib.h"
+#include <stdlib.h>
 #include <string.h>
-#include "dataBaseADT.h"
 #include "planeSeatDBHandler.h"
-
-#define DB_NAME "planeSeat"
-#define MAX_QUERY_LENGTH 512
 
 static	char * createFlightTableQuery = "CREATE TABLE flight(" \
         "flightNumber   TEXT," \
@@ -89,16 +85,15 @@ int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int r
 {
     if(!checkFlightReservation(db, flightNumber, colLetter, rowNumber, userId))
         return -1;
-
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, updateFlightSeatsFmt, updateFlightSeatsFmtSize);
-    sprintf(newQuery + updateFlightSeatsFmtSize, "1 WHERE flightNumber = '%s' AND colLetter = '%c' AND rowLetter = %d;", flightNumber, colLetter, rowNumber);
+    sprintf(newQuery + updateFlightSeatsFmtSize, "1 WHERE flightNumber = '%s' AND colLetter = '%c' AND rowNumber = %d;", flightNumber, colLetter, rowNumber);
     int result = executeQueryDataBase(db, newQuery, false);
+    
     if(result < 0)
         return -1;
-
     memcpy(newQuery, insertReservationFmt, insertReservationFmtSize);
-    sprintf(newQuery + insertReservationFmtSize, "%s, %s, %c, %d);", flightNumber, userId, colLetter, rowNumber);
+    sprintf(newQuery + insertReservationFmtSize, "'%s', '%s', '%c', %d);", flightNumber, userId, colLetter, rowNumber);
     return executeQueryDataBase(db, newQuery, false);
 }
 
@@ -109,7 +104,7 @@ int deleteFligth(dataBaseADT db, char * flightNumber)
 
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, deleteFromFlightFmt, deleteFromFlightFmtSize);
-    sprintf(newQuery + deleteFromFlightFmtSize, "%s ;", flightNumber);
+    sprintf(newQuery + deleteFromFlightFmtSize, "'%s';", flightNumber);
     return executeQueryDataBase(db, newQuery, false);
 }
 
@@ -120,13 +115,13 @@ int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char c
 
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, deleteFromReservationFmt, deleteFromReservationFmtSize);
-    sprintf(newQuery + deleteFromReservationFmtSize, "%s AND userId = %s AND colLetter = %c AND rowNumber = %d;", flightNumber, userId, colLetter, rowNumber);
+    sprintf(newQuery + deleteFromReservationFmtSize, "'%s' AND userId = '%s' AND colLetter = '%c' AND rowNumber = %d;", flightNumber, userId, colLetter, rowNumber);
     int result = executeQueryDataBase(db, newQuery, false);
     if(result < 0)
         return -1;
 
     memcpy(newQuery, updateFlightSeatsFmt, updateFlightSeatsFmtSize);
-    sprintf(newQuery + updateFlightSeatsFmtSize, "0 WHERE flightNumber = '%s' AND colLetter = '%c' AND rowLetter = %d;", flightNumber, colLetter, rowNumber);
+    sprintf(newQuery + updateFlightSeatsFmtSize, "0 WHERE flightNumber = '%s' AND colLetter = '%c' AND rowNumber = %d;", flightNumber, colLetter, rowNumber);
     return executeQueryDataBase(db, newQuery, false);
 }
 
@@ -138,23 +133,45 @@ flight_t * getFlights(dataBaseADT db, int * qty)
     char * query = "SELECT COUNT(*) FROM flight;";
     prepareStatement(db, query);
     int rowQty = 0;
+    stepStatement(db);
     getIntFromColumn(db, 0, &rowQty);
     finalizeStatement(db);
-
     flight_t * flights = malloc(rowQty * sizeof(flight_t));
     char * newQuery = "SELECT * FROM flight;";
     prepareStatement(db, newQuery);
     int i = 0;
     while(stepStatement(db) == 100)
     {
-        flights[i].flightNumber = getTextFromColumn(db, 0);
-        flights[i].origin = getTextFromColumn(db, 1);
-        flights[i].destination = getTextFromColumn(db, 2);
+        char * flightNumber = getTextFromColumn(db, 0);
+        int flightNumberSize = strlen(flightNumber);
+        flights[i].flightNumber = malloc(flightNumberSize);
+        memcpy(flights[i].flightNumber, flightNumber, flightNumberSize);
+        char * origin = getTextFromColumn(db, 1);
+        int originSize = strlen(origin);
+        flights[i].origin = malloc(originSize);
+        memcpy(flights[i].origin, origin, originSize);
+        char * destination = getTextFromColumn(db, 2);
+        int destinationSize = strlen(destination);
+        flights[i].destination = malloc(destinationSize);
+        memcpy(flights[i].destination, destination, destinationSize);
         i++;
     }
     finalizeStatement(db);
     *qty = rowQty;
-    return flights; //hay q acordarse de hacer el free!!!!
+    return flights;
+}
+
+void freeFlights(flight_t * flights, int size)
+{
+    if(flights == NULL || size < 0)
+        return;
+    for(int i = 0 ; i < size ; i++)
+    {
+        free(flights[i].flightNumber);
+        free(flights[i].origin);
+        free(flights[i].destination);
+    }
+    free(flights);
 }
 
 flightSeat_t * getFlightSeatsDistribution(dataBaseADT db, char * flightNumber, int * qty)
@@ -163,28 +180,41 @@ flightSeat_t * getFlightSeatsDistribution(dataBaseADT db, char * flightNumber, i
         return NULL;
         
     char query[MAX_QUERY_LENGTH];
-    sprintf(query, "SELECT COUNT(*) FROM flightSeats WHERE flightNumber = %s;", flightNumber); 
+    sprintf(query, "SELECT COUNT(*) FROM flightSeats WHERE flightNumber = '%s';", flightNumber); 
     prepareStatement(db, query);
     int rowQty = 0;
+    stepStatement(db);
     getIntFromColumn(db, 0, &rowQty);
     finalizeStatement(db);
 
     flightSeat_t * flightSeatDistribution = malloc(rowQty * sizeof(flightSeat_t));
     char newQuery[MAX_QUERY_LENGTH];
-    sprintf(newQuery, "SELECT * FROM flight WHERE flightNumber = %s;", flightNumber);
+    sprintf(newQuery, "SELECT * FROM flightSeats WHERE flightNumber = '%s';", flightNumber);
     prepareStatement(db, newQuery);
     int i = 0;
     while(stepStatement(db) == 100)
     {
-        flightSeatDistribution[i].flightNumber = getTextFromColumn(db, 0);
-        getCharFromColumn(db, 1, &(flightSeatDistribution[i].colLetter));
+        char * flightNumber = getTextFromColumn(db, 0);
+        int flightNumberSize = strlen(flightNumber);
+        flightSeatDistribution[i].flightNumber = malloc(flightNumberSize);
+        memcpy(flightSeatDistribution[i].flightNumber, flightNumber, flightNumberSize);
+        flightSeatDistribution[i].colLetter = getCharFromColumn(db, 1);
         getIntFromColumn(db, 2, &(flightSeatDistribution[i].rowNumber));
         getIntFromColumn(db, 3, (int *) &(flightSeatDistribution[i].occupied));
         i++;
     }
     finalizeStatement(db);
     *qty = rowQty;
-    return flightSeatDistribution; //hay q acordarse de hacer free!
+    return flightSeatDistribution;
+}
+
+void freeFlightSeatsDistribution(flightSeat_t * fsd, int size)
+{
+    if(fsd == NULL || size < 0)
+        return;
+    for (int i = 0 ; i < size ; i++)
+        free(fsd[i].flightNumber);
+    free(fsd);
 }
 
 static int createTables(dataBaseADT db)
@@ -202,12 +232,12 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
 {
     char newQuery[MAX_QUERY_LENGTH];
     int result = 0;
-    for(int i = (int)'a'; i < COL_NUMBER ; i++)
+    for(int i = 0; i < COL_NUMBER ; i++)
     {
-        for(int j = 1 ; j < ROW_NUMBER; i++)
+        for(int j = 1 ; j <= ROW_NUMBER; j++)
         {
             memcpy(newQuery, insertFlightSeatsFmt, insertFlightSeatsFmtSize);
-            sprintf(newQuery + insertFlightSeatsFmtSize, "%s, %c, %d, %d);", flightNumber, (char)i, j, false);
+            sprintf(newQuery + insertFlightSeatsFmtSize, "'%s', '%c', %d, %d);", flightNumber, 'a' + i, j, false);
             result += executeQueryDataBase(db, newQuery, false);
             if(result < 0)
                 return result;
@@ -218,7 +248,7 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
 
 static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId)
 {
-    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter >= COL_MIN_LETTER + COL_NUMBER || rowNumber <= 0 || rowNumber >= ROW_NUMBER)
+    if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter >= (COL_MIN_LETTER + COL_NUMBER) || rowNumber <= 0 || rowNumber > ROW_NUMBER)
         return 0;
     return 1;
 }

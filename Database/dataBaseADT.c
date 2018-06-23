@@ -101,7 +101,9 @@ int executeQueryDataBase(dataBaseADT dataBase, const char * query, boolean showQ
     if(showQuery)
         dataBase->returnCode = sqlite3_exec(dataBase->db, query, callBackShow, 0, &(dataBase->errorMessage));
     else
+    {
         dataBase->returnCode = sqlite3_exec(dataBase->db, query, callBackNotShow, 0, &(dataBase->errorMessage));
+    }
     if(dataBase->returnCode != SQLITE_OK)
     {
         fprintf(stderr, "SQL error: %s\n", dataBase->errorMessage);
@@ -169,7 +171,7 @@ int getIntFromColumn(dataBaseADT dataBase, int col, int * ret)
     return 0;
 }
 
-int getCharFromColumn(dataBaseADT dataBase, int col, char * ret)
+int getCharFromColumn(dataBaseADT dataBase, int col)
 {
     if(dataBase == NULL)
     {
@@ -182,8 +184,7 @@ int getCharFromColumn(dataBaseADT dataBase, int col, char * ret)
         fprintf(stderr, "getIntFromColumn():Invalid Arguments");
         return -1;
     }
-    *ret = sqlite3_column_int(dataBase->statement, col);
-    return 0;
+    return *((char *)sqlite3_column_text(dataBase->statement, col));
 }
 
 char * getTextFromColumn(dataBaseADT dataBase, int col)

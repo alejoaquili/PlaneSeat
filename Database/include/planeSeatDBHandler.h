@@ -1,7 +1,10 @@
-#include <stdio.h>
-#include "stdlib.h"
-#include <string.h>
+#ifndef PLANE_SEAT_DB_HANDLER_H
+#define PLANE_SEAT_DB_HANDLER_H
+
 #include "dataBaseADT.h"
+
+#define DB_NAME "planeSeat"
+#define MAX_QUERY_LENGTH 512
 
 
 #define COL_NUMBER 8
@@ -21,4 +24,24 @@ typedef struct flightSeat_t{
     int rowNumber;
     boolean occupied;
 } flightSeat_t;
+
+dataBaseADT createPlaneSeatDataBaseHandler(void);
+
+int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * destination);
+
+int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId);
+
+int deleteFligth(dataBaseADT db, char * flightNumber);
+
+int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber);
+
+flight_t * getFlights(dataBaseADT db, int * qty);
+
+void freeFlights(flight_t * flights, int size);
+
+flightSeat_t * getFlightSeatsDistribution(dataBaseADT db, char * flightNumber, int * qty);
+
+void freeFlightSeatsDistribution(flightSeat_t * fsd, int size);
+
+#endif
 
