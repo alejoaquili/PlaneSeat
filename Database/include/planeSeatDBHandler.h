@@ -1,7 +1,7 @@
 #ifndef PLANE_SEAT_DB_HANDLER_H
 #define PLANE_SEAT_DB_HANDLER_H
 
-#include "dataBaseADT.h"
+#include "dataBase.h"
 
 #define DB_NAME "planeSeat"
 #define MAX_QUERY_LENGTH 512

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "./../Database/include/dataBaseADT.h"
+#include "dataBase.h"
 #include "include/CuTest.h"
 #include <unistd.h>
 #include <stdlib.h>
