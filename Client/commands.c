@@ -13,7 +13,7 @@ static int help(int argc, char * argv[])
     printf("\n\nWelcome to the Flight Reservation service\n");
     printf("These are the available commands:\n");
     for (int i=1; i < COMMAND_QTY; i++)
-        printf("\n%s:\t%s\n", shellCommands[i].name, shellCommands[i].description);
+        printf("\n%s:\t%s\n", commands[i].name, commands[i].description);
     
     return 0;
 }
