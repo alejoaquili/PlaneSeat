@@ -4,7 +4,7 @@
 #include "planeSeatDBHandler.h"
 #include "utils.h"
 
-static command_t shellCommands[] = {
+static command_t commands[] = {
     {"help", " ", help}, 
     {"add flight", "Add a new flight to the system.", addFlight},
     {"delete flight", "Delete a flight from the system.", deleteFlight},
@@ -29,7 +29,7 @@ int main()
         { 
             commandSize = extractCommand(command, buffer);
             arguments = buffer[commandSize] != '\0';
-            resp = run(command, buffer+commandSize+arguments, shellCommands); 
+            resp = run(command, buffer+commandSize+arguments, commands); 
             validate(resp);
         }
         CLEAN_BUFFER
