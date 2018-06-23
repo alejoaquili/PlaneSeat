@@ -6,6 +6,30 @@
 
 #define QUIT -1
 
+static char * askForFlightNumber(char * id);
+
+static int askForSeat(char * letter, int * number);
+
+static int checkSeat(char letter, int number);
+
+static int checkValidNumber(char * number);
+
+static int existsReservation(char * id, int fligthNumber, char letter, int number);
+
+static int seatFree(int flightNumber, char letter, int number);
+
+static void reserveSeat(id, flightNumber, buffer);
+
+static int checkNotRepeated(char * number);
+
+static void addFlightToDB(char * number);
+
+static void deleteFlightFromDB(char * number);
+
+static flightSeat_t * findFlight(char * flight);
+
+
+
 int help(int clientSocketFd)
 {
     printf("\n\nWelcome to the Flight Reservation service\n");
