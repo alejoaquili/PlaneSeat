@@ -19,6 +19,7 @@ static sem_t * semaphore;
 
 int main(int argc , char *argv[])
 {
+    char fdArg[1];
     signal(SIGCHLD, sigChildHandler);
     signal(SIGKILL, sigEndHandler);
     signal(SIGTERM, sigEndHandler);
@@ -29,18 +30,19 @@ int main(int argc , char *argv[])
     checkFail(listenFd, "Error in listener\n");
     bindToPort(listenFd, PORT);
     checkFail(listen(listenFd, 10) == -1, "Unable to linten in this port\n");
+    initializeConnectionHandler();
 
     while(1)
     {
         int connectFd = acceptClientSocket(listenFd);
-
+        fdArg[0] = itoa(connectFd);
         sem_wait(semaphore);
         switch(fork()) 
         {
             case 0:
                 close(listenFd);
                 sem_close(semaphore);
-                execlp(CONECTION_HANDLER, " ", ((char *)NULL));
+                execlp(CONECTION_HANDLER, fdArg, ((char *)NULL));
 
                 fail("exec() Failed");
                 close(connectFd);
