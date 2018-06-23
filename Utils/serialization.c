@@ -5,6 +5,9 @@
 // arrays must be the ones declare in here no native array will be supported
 typedef enum type {Integer, Double, String, Array, Object, Json, Undefined} Type;
 
+// enumw for decerialization
+typedef enum state {incrementWeight, decrementWeight, addValue, createNode} State;
+typedef enum stateObject {keyState, valueState, endKey} stateObject;
 typedef struct arrayNodeCDT{
     struct arrayNodeCDT * next;
     void * value;
@@ -75,6 +78,16 @@ char* doubleToString(double number);
 char* stringToString( char* string);
 char* arrayToString(arrayADT array);
 
+// deserialization for array
+static State getStateArray(char c, int weight);
+arrayADT deserializeArray(char* string);
+void deserializeArrayNodeAt(arrayADT array, int index, Type type);
+arrayADT  parseArray(char* string);
+int valueOfInt(char* string);
+double valueOfDouble(char* string);
+char* valueOfString(char* string);
+
+static objectADT parseObject(char* string );
 //----------------End of array contract----------------------------------------
 
 //------------------- beginnig of buffer contract -----------------------------
@@ -527,6 +540,130 @@ char * jsonToString(jsonADT json)
 // ---------------------- Begginning of deserialization mathods ---------------
 
 
+
+arrayADT deserializeArray(char* string)
+{
+    arrayADT array = parseArray(string);
+    return array;
+}
+
+// no funciona hay que cambiar de estados
+arrayADT  parseArray(char* string)
+{
+    if(string == NULL)
+        return NULL;
+    
+    // i assume the first character is the beginning of an array
+    int weight = 1;
+    int index = 1;
+    State state;
+    arrayADT array = newArray();
+    bufferADT buffer = newBuffer();
+    void* value;
+    do
+    {
+        char c = *(string + index);
+        state = getStateArray(c, weight);
+        switch(state)
+        {
+            case incrementWeight:
+                weight++;
+                addToBuffer(buffer, &c,1);
+                break;
+            case addValue:
+                addToBuffer(buffer, &c,1);
+                break;
+            case createNode:
+                value = calloc(getBufferSize(buffer), sizeof(char));
+                getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
+                arrayNodeADT node = newArrayNode(value, Undefined);
+                addNodeToArray(array, node);
+                break;
+            case decrementWeight:
+                weight--;
+                if(weight == 0)
+                {
+                    value = calloc(getBufferSize(buffer), sizeof(char));
+                    getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
+                    arrayNodeADT node = newArrayNode(value, Undefined);
+                    addNodeToArray(array, node);
+                    break;
+                }
+                addToBuffer(buffer, &c, 1);
+                break;
+        }
+        index++;
+    }while(weight != 0);
+    freeBuffer(buffer);
+    return array;
+}
+
+
+static State getStateArray(char c, int weight)
+{
+    char openingBrackets = '[';
+    char closingBrackets = ']';
+    char comma = ',';
+    if( c == openingBrackets)
+        return incrementWeight;
+    if( c ==  closingBrackets)
+        return decrementWeight;
+    if(c == comma)
+    {
+        if(weight > 1)
+            return addValue;
+        return createNode;
+    }
+    return addValue;
+}
+
+
+void deserialize(void* destination, char* string, Type type)
+{
+    int resultInt;
+    double resultDouble;
+    char* resultString;
+    arrayADT resultArray;
+    switch(type)
+    {
+        case Integer:
+            resultInt = valueOfInt(string);
+            memcpy(destination, &resultInt, sizeof(int));
+            break;
+        case Double:
+            resultDouble = valueOfDouble(string);
+            memcpy(destination, &resultDouble, sizeof(double));
+            break;
+        case String:
+            resultString = valueOfString(string);
+            memcpy(destination, &resultString, strlen(string));
+            break;
+        case Array:
+            resultArray = deserializeArray(string);
+            int size = sizeof(arrayCDT);
+            memcpy(destination, resultArray, size);
+            break;
+        case Object:
+            printf("not implemented yet\n");
+            break;
+        case Undefined:
+            printf("not implemented!\n");
+            memcmp(destination, NULL, sizeof(int));
+            break;
+    }
+}
+
+void deserializeArrayNodeAt(arrayADT array, int index, Type type)
+{
+    if(array == NULL || index < 0 || index > getArraySize(array))
+        return;
+    
+    arrayNodeADT node = getNodeAt(array->first, index);
+    deserialize(node->value, node->value, type);
+    node->type = type;
+}
+
+
 // ------------------------ Deserialization of primitives ---------------------
 
 int valueOfInt(char* string)
@@ -535,7 +672,7 @@ int valueOfInt(char* string)
     return value;
 }
 
-double valueofDouble(char* string)
+double valueOfDouble(char* string)
 {
     double value = strtod(string, NULL);
     return value;
@@ -552,6 +689,57 @@ char* valueOfString(char* string)
 
 
 // ------------------------ End deserialization of primitives -----------------
+
+
+// object deserialization
+objectADT deserializeObject(char* string)
+{
+    objectADT object = parseObject(string);
+    return object;
+}
+
+static objectADT parseObject(char* string )
+{
+    bufferADT buffer = newBuffer();
+    char* key;
+    void * value = NULL;
+    int c;
+    int index = 0;
+    char semicolon = ':';
+    stateObject state = keyState;
+    do
+    {
+        c = *(string + index);
+        switch(state)
+        {
+            case keyState:
+                if( c != semicolon)
+                    addToBuffer(buffer, &c, 1);
+                else
+                    state = endKey;
+                break;
+            case endKey:
+                key = calloc(getBufferSize(buffer), sizeof(char));
+                getLastFromBuffer(buffer, key, getBufferSize(buffer));
+                state = valueState;
+                addToBuffer(buffer, &c, 1);
+                break;
+            case valueState:
+                if(c != EOF)
+                    addToBuffer(buffer, &c, 1);
+                else
+                {
+                    value = calloc(getBufferSize(buffer), sizeof(char));
+                    getLastFromBuffer(buffer, value, getBufferSize(buffer));
+                }
+                break; 
+        }
+        index++;
+    }while(c != EOF);
+    freeBuffer(buffer);
+    
+    return newObject(key, value, Undefined);
+}
 
 
 
@@ -668,14 +856,6 @@ int testJsonToString()
 }
 
 
-int testValueOfDouble()
-{
-    char* value = "450.00";
-    double expectedResult = 450.00;
-    double number = valueofDouble(value);
-    return number - expectedResult == 0;
-}
-
 int testBuffer()
 {
     bufferADT buffer = newBuffer();
@@ -689,19 +869,72 @@ int testBuffer()
 }
 
 
+//  beginnging of deserialization tests ---------------------------------------
+
+int testvalueOfDouble()
+{
+    char* value = "450.00";
+    double expectedResult = 450.00;
+    double number = valueOfDouble(value);
+    return number - expectedResult == 0;
+}
+
+int testvalueOfInt()
+{
+    char* value = "21";
+    int expectedResult = 21;
+    int number = valueOfInt(value);
+    return number - expectedResult == 0;
+}
+
+
+int testValueOfString()
+{
+    char* testString = "santiago";
+    char* expectedResult =  " santiago";
+
+    char* string = valueOfString(testString);
+    return strcmp(string, expectedResult) == 0;
+}
+
+
+int testStringToArray()
+{
+    char* testArray = "[\"santiago\",21,[\"pi\",\"poo\"]]";
+    char* testEasy = "[\"santi\"]";
+    arrayADT array = deserializeArray(testArray);
+    printf("the first thing is the size ...%d\n",getArraySize(array));
+    deserializeArrayNodeAt(array, 0, Array);
+    printf("secondly the content .... %d\n",getArraySize(getValueInArray(array, 0)) );
+    return 1;
+}
+
+
+int testStringToObject()
+{
+    char* objectString = "\"name\":\"santiago\"";
+    objectADT object = deserializeObject(objectString);
+    printf("the result was... %s", getObjectValue(object));
+    return 1;
+}
+
+
 int main(void)
 {
     printf("going to run tests...\n");
     printf(" the result was %s\n",(test_intToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(test_doubleToString() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(test_doubleToString() == 0)?"False" : "True");
     printf(" the result was %s\n",(testBuffer() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testArrayToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testArrayOfArraytoString() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testArrayOfArraytoString() == 0)?"False" : "True");
     printf(" the result was %s\n",(testObjectToString() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testJsonToString() == 0)?"False" : "True" );
     printf("DONE! serialization tests\n");
     printf("\n");
     printf("\n");
     printf("Going to test deserializatino...\n");
-    printf(" the result was %s\n",(testValueOfDouble() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
