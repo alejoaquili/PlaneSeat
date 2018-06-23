@@ -210,11 +210,11 @@ static int askForSeat(char * letter, int * number)
     {
         printf("Please enter an available flight seat.\nFormat: [A-H][01-30]\nType quit to cancel\n");
         scanf(buffer, BUFFER_LENGTH);
-        cant = sscanf(buffer, "%c %d", &letter, &number);
+        cant = sscanf(buffer, "%c %d", letter, number);
 
         if (buffer[0] != '\0' && !IS_QUIT(buffer) && cant == 2) 
         { 
-        	if (checkSeat(&letter, &number))
+        	if (checkSeat(*letter, *number))
         	{
         		valid = 1;
         	}
@@ -231,7 +231,7 @@ static int askForSeat(char * letter, int * number)
     return 0;
 }
 
-static int checkSeat(char * letter, int number)
+static int checkSeat(char letter, int number)
 {
 	if (toUpper(letter) < 'A' || toUpper(letter) > 'H')
 		return 0;
@@ -244,7 +244,8 @@ static int checkSeat(char * letter, int number)
 
 static int checkValidNumber(char * number)
 {
-	if (!isdigit(&number) || &number < 0)
+	int num = atoi(number);
+    if (!isdigit(num) || num < 0)
 		return 0;
 	return 1;
 }
@@ -280,7 +281,7 @@ static void deleteFlightFromDB(char * number)
 	//lo elimina
 }
 
-static flightSeat_t findFlight(char * flight)
+static flightSeat_t * findFlight(char * flight)
 {
 	//se fija si existe el flight. si existe devuelve el vector de seats, sino null
 	return NULL;

@@ -4,7 +4,9 @@
 #include "planeSeatDBHandler.h"
 #include "utils.h"
 
-static command_t commands[] = {
+#define COMMAND_QTY 6
+
+static command_t commands[COMMAND_QTY] = {
     {"help", " ", help}, 
     {"add flight", "Add a new flight to the system.", addFlight},
     {"delete flight", "Delete a flight from the system.", deleteFlight},
@@ -15,11 +17,11 @@ static command_t commands[] = {
 
 #define IS_QUIT(word) (strcmp(word, "quit") == 0)
 
-int main()
+int planeSeatClientUI(void)
 { 
     printf("\n\nWelcome to the Flight Reservation Service.\n\tPlease run help to see the available commands.\n");
     char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
-    int commandSize = 0, arguments = 0, resp = 0;
+    int  resp = 0;
     while(1)
     {
         printf("\n$ >> ");
@@ -27,16 +29,15 @@ int main()
 
         if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
         { 
-            commandSize = extractCommand(command, buffer);
-            arguments = buffer[commandSize] != '\0';
-            resp = run(command, buffer+commandSize+arguments, commands); 
+            extractCommand(command, buffer);
+            resp = run(command, commands); 
             validate(resp);
         }
         CLEAN_BUFFER
     }
 }
 
-int run(const char * name, const char * args, command_t * commands)
+int run(const char * name, command_t * commands)
 {
     int ret = INVALID_COMMAND;
     for (int i = 0; i < COMMAND_QTY; i++) 
@@ -44,7 +45,7 @@ int run(const char * name, const char * args, command_t * commands)
         if (strcmp(name, commands[i].name) == 0) 
         {
             ret = VALID_COMMAND;
-            commands[i].function(args);
+            commands[i].function();
         }
     }
     return ret;
@@ -59,14 +60,14 @@ void validate(int input)
 int extractCommand(char * command, const char * buffer) 
 {
     int i = 0;
-    for (i = 0; buffer[i] != '\0' && buffer[i] != ' ' && buffer[i] != '&' && buffer[i] != '|'; i++)
+    for (i = 0; buffer[i] != '\0' && buffer[i] != ' '; i++)
         command[i] = buffer[i];
     command[i] = '\0';
     return i;
 }
 
   
-void printTest()
+void printTest(void)
 {
 	flightSeat_t seats[TOTAL_SEATS];
 	int i, j, k=0;
