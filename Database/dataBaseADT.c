@@ -200,6 +200,15 @@ char * getTextFromColumn(dataBaseADT dataBase, int col)
         fprintf(stderr, "getIntFromColumn():Invalid Arguments");
         return NULL;
     }
-    return (char *)sqlite3_column_text(dataBase->statement, col);
+    char * result = (char *) sqlite3_column_text(dataBase->statement, col);
+    int size = strlen(result);
+    char * cpy = malloc(size); 
+    memcpy(cpy, result, size);
+    return cpy;
 }
 
+void freeDBText(char * text)
+{
+    if(text != NULL)
+        free(text);
+}

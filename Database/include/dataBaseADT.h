@@ -31,6 +31,8 @@ int getCharFromColumn(dataBaseADT dataBase, int col);
 
 char * getTextFromColumn(dataBaseADT dataBase, int col);
 
+void freeDBText(char * text);
+
 
 #endif
 

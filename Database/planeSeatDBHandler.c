@@ -136,24 +136,16 @@ flight_t * getFlights(dataBaseADT db, int * qty)
     stepStatement(db);
     getIntFromColumn(db, 0, &rowQty);
     finalizeStatement(db);
+
     flight_t * flights = malloc(rowQty * sizeof(flight_t));
     char * newQuery = "SELECT * FROM flight;";
     prepareStatement(db, newQuery);
     int i = 0;
     while(stepStatement(db) == 100)
     {
-        char * flightNumber = getTextFromColumn(db, 0);
-        int flightNumberSize = strlen(flightNumber);
-        flights[i].flightNumber = malloc(flightNumberSize);
-        memcpy(flights[i].flightNumber, flightNumber, flightNumberSize);
-        char * origin = getTextFromColumn(db, 1);
-        int originSize = strlen(origin);
-        flights[i].origin = malloc(originSize);
-        memcpy(flights[i].origin, origin, originSize);
-        char * destination = getTextFromColumn(db, 2);
-        int destinationSize = strlen(destination);
-        flights[i].destination = malloc(destinationSize);
-        memcpy(flights[i].destination, destination, destinationSize);
+        flights[i].flightNumber = getTextFromColumn(db, 0);
+        flights[i].origin = getTextFromColumn(db, 1);
+        flights[i].destination = getTextFromColumn(db, 2);
         i++;
     }
     finalizeStatement(db);
@@ -167,9 +159,9 @@ void freeFlights(flight_t * flights, int size)
         return;
     for(int i = 0 ; i < size ; i++)
     {
-        free(flights[i].flightNumber);
-        free(flights[i].origin);
-        free(flights[i].destination);
+        freeDBText(flights[i].flightNumber);
+        freeDBText(flights[i].origin);
+        freeDBText(flights[i].destination);
     }
     free(flights);
 }
@@ -194,10 +186,7 @@ flightSeat_t * getFlightSeatsDistribution(dataBaseADT db, char * flightNumber, i
     int i = 0;
     while(stepStatement(db) == 100)
     {
-        char * flightNumber = getTextFromColumn(db, 0);
-        int flightNumberSize = strlen(flightNumber);
-        flightSeatDistribution[i].flightNumber = malloc(flightNumberSize);
-        memcpy(flightSeatDistribution[i].flightNumber, flightNumber, flightNumberSize);
+        flightSeatDistribution[i].flightNumber = getTextFromColumn(db, 0);
         flightSeatDistribution[i].colLetter = getCharFromColumn(db, 1);
         getIntFromColumn(db, 2, &(flightSeatDistribution[i].rowNumber));
         getIntFromColumn(db, 3, (int *) &(flightSeatDistribution[i].occupied));
@@ -213,7 +202,7 @@ void freeFlightSeatsDistribution(flightSeat_t * fsd, int size)
     if(fsd == NULL || size < 0)
         return;
     for (int i = 0 ; i < size ; i++)
-        free(fsd[i].flightNumber);
+        freeDBText(fsd[i].flightNumber);
     free(fsd);
 }
 
