@@ -38,7 +38,7 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-void initializeConnectionHandler()
+void initializeConnectionHandler(void)
 {
    db = createPlaneSeatDataBaseHandler();
 }
@@ -49,6 +49,7 @@ void sendFlights(int socketFd, int size)
     flight_t * flights = getFlights(db, &qty);
     char * flightsText = serializate(flights);
     send(socketFd, flightsText, strlen(flightsText));
+    freeFlights(flights, qty);
 }
 
 void addFlight(int socketFd, int size)
@@ -80,8 +81,12 @@ void deleteReservation(int socketFd, int size)
 
 void getFlightDistribution(int socketFd, int size)
 {
-
-
+    char * flightNumber = deserializer(size);// nose como levantamos el flight
+    int qty;
+    flightSeats_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
+    char * fsdText = serializate(fsd);
+    send(socketFd, fsdText, strlen(fsdText));
+    freeFlightSeatsDistribution(fsd, qty);
 }
 
 
