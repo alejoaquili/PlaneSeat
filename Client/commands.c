@@ -2,14 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "flightUI.c" //crear este archivo
+#include "planeSeatClientUI.h"
 
 #define QUIT -1
 
-static int help(int argc, char * argv[])
+int help(int clientSocketFd)
 {
-    if(!checkArguments(0, argc))
-        return 1;
     printf("\n\nWelcome to the Flight Reservation service\n");
     printf("These are the available commands:\n");
     for (int i=1; i < COMMAND_QTY; i++)
@@ -18,7 +16,7 @@ static int help(int argc, char * argv[])
     return 0;
 }
 
-static int addFlight(char * args)
+int addFlight(int clientSocketFd)
 {	
 	char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
     int added = 0;
@@ -51,7 +49,7 @@ static int addFlight(char * args)
     return 0;
 }
 
-static int deleteFlight(char * args)
+int deleteFlight(int clientSocketFd)
 {	
 	char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
     int deleted = 0;
@@ -78,10 +76,11 @@ static int deleteFlight(char * args)
     return 0;
 }
 
-static int check(char * flight)
+int check(int clientSocketFd)
 {
 	flightSeat_t * seats
-	
+	char flight[BUFFER_LENGTH];
+    //hay q pedir el flight number aca
 	if (seats = findFlight(flight) != NULL)
 	{
 		printPlane(seats);
@@ -91,7 +90,7 @@ static int check(char * flight)
 	return 1;
 }
 
-static int reserve(char * args)
+int reserve(int clientSocketFd)
 {
 	char buffer[BUFFER_LENGTH], letter;
 	char * flightNumber;
@@ -134,7 +133,7 @@ static int reserve(char * args)
     return 0;
 }
 
-static int cancel(char * args)
+int cancel(int clientSocketFd)
 {
 	char buffer[BUFFER_LENGTH], letter;
 	char * flightNumber;

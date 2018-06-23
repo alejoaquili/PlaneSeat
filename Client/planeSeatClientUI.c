@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "planeSeatDBHandler.h"
 #include "utils.h"
+#include "commands.h"
 
 #define COMMAND_QTY 6
 
@@ -15,9 +16,15 @@ static command_t commands[COMMAND_QTY] = {
     {"cancel reservation", "Cancel a seat reservation for a flight.", cancel},
 };
 
-#define IS_QUIT(word) (strcmp(word, "quit") == 0)
+static int run(const char * name, command_t * commands, int clientSocketFd);
 
-int planeSeatClientUI(void)
+static void validate(int input);
+
+static int extractCommand(char * command, const char * buffer);
+
+
+
+int planeSeatClientUI(int clientSocketFd)
 { 
     printf("\n\nWelcome to the Flight Reservation Service.\n\tPlease run help to see the available commands.\n");
     char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
@@ -30,14 +37,14 @@ int planeSeatClientUI(void)
         if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
         { 
             extractCommand(command, buffer);
-            resp = run(command, commands); 
+            resp = run(command, commands, clientSocketFd); 
             validate(resp);
         }
         CLEAN_BUFFER
     }
 }
 
-int run(const char * name, command_t * commands)
+static int run(const char * name, command_t * commands, int clientSocketFd)
 {
     int ret = INVALID_COMMAND;
     for (int i = 0; i < COMMAND_QTY; i++) 
@@ -45,19 +52,19 @@ int run(const char * name, command_t * commands)
         if (strcmp(name, commands[i].name) == 0) 
         {
             ret = VALID_COMMAND;
-            commands[i].function();
+            commands[i].function(clientSocketFd);
         }
     }
     return ret;
 }
 
-void validate(int input) 
+static void validate(int input) 
 {
     if(input == INVALID_COMMAND)
         printf("\n\nInvalid command.\n");
 }
 
-int extractCommand(char * command, const char * buffer) 
+static int extractCommand(char * command, const char * buffer) 
 {
     int i = 0;
     for (i = 0; buffer[i] != '\0' && buffer[i] != ' '; i++)

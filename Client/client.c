@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "socketlib.h"
+#include "planeSeatClientUI"
 
 #define PORT 7200
 #define IP "127.0.0.1"
@@ -12,7 +13,7 @@ int main (void)
 
 	connectClientToSocket(clientSocketFd, PORT, IP);
 
-	CLIENT_HANDLER(clientSocketFd);
+	planeSeatClientUI(clientSocketFd);
 }
 
 
