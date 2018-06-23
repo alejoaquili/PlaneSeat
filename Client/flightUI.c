@@ -4,7 +4,69 @@
 #include "planeSeatDBHandler.h"
 #include "utils.h"
 
+static command_t shellCommands[] = {
+    {"help", " ", help}, 
+    {"add flight", "Add a new flight to the system.", addFlight},
+    {"delete flight", "Delete a flight from the system.", deleteFlight},
+    {"check flight status", "Check reserved seats for a certain flight.", check},
+    {"make reservation", "Make a seat reservation for a flight.", reserve},
+    {"cancel reservation", "Cancel a seat reservation for a flight.", cancel},
+};
+
+#define IS_QUIT(word) (strcmp(word, "quit") == 0)
+
 int main()
+{ 
+    printf("\n\nWelcome to the Flight Reservation Service.\n\tPlease run help to see the available commands.\n");
+    char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
+    int commandSize = 0, arguments = 0, resp = 0;
+    while(1)
+    {
+        printf("\n$ >> ");
+        scanf(buffer, BUFFER_LENGTH);
+
+        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
+        { 
+            commandSize = extractCommand(command, buffer);
+            arguments = buffer[commandSize] != '\0';
+            resp = run(command, buffer+commandSize+arguments, shellCommands); 
+            validate(resp);
+        }
+        CLEAN_BUFFER
+    }
+}
+
+int run(const char * name, const char * args, command_t * commands)
+{
+    int ret = INVALID_COMMAND;
+    for (int i = 0; i < COMMAND_QTY; i++) 
+    {
+        if (strcmp(name, commands[i].name) == 0) 
+        {
+            ret = VALID_COMMAND;
+            commands[i].function(args);
+        }
+    }
+    return ret;
+}
+
+void validate(int input) 
+{
+    if(input == INVALID_COMMAND)
+        printf("\n\nInvalid command.\n");
+}
+
+int extractCommand(char * command, const char * buffer) 
+{
+    int i = 0;
+    for (i = 0; buffer[i] != '\0' && buffer[i] != ' ' && buffer[i] != '&' && buffer[i] != '|'; i++)
+        command[i] = buffer[i];
+    command[i] = '\0';
+    return i;
+}
+
+  
+void printTest()
 {
 	flightSeat_t seats[TOTAL_SEATS];
 	int i, j, k=0;
@@ -22,7 +84,6 @@ int main()
 			k++;
 		}
 	}
-
 	printPlane(seats);
 	return 0;
 }
@@ -77,3 +138,4 @@ void printPlane(flightSeat_t * seats)
 	}
 	putchar('\n');
 }
+
