@@ -1,9 +1,8 @@
 include Makefile.inc
 
-TARGET := client
+TARGET := connectionHandler
 SOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.c=.o)
-
 
 all: clean comp link
 
@@ -11,7 +10,7 @@ comp:$(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES)
 
 link:$(OBJECTS)
-	$(LINKER) $(LFLAGS) $(OBJECTS) -I./../Utils/*.o -o $(TARGET).out
+	$(LINKER) $(LFLAGS) $(OBJECTS) -I./../../Utils/*.o -I./../../Database/*.o -o $(TARGET).out
 
 %.o : %.c
 	$(CC) $(CFLAGS) $< -o $@

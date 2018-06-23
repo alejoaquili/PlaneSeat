@@ -3,7 +3,7 @@
 
 #define PORT 7200
 #define CONNECTIONS_QTY 2
-#define CONECTION_HANDLER "./serverHandler.out"
+#define CONECTION_HANDLER "./Connection Handler/connectionHandler.out"
 
 #endif
 

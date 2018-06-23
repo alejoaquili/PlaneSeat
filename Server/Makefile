@@ -1,18 +1,27 @@
 include Makefile.inc
 
+TARGET := server
 SOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.c=.o)
 
-all: clean obj
 
-obj:$(SOURCES)
-	$(CC) -c $(CFLAGS) $(SOURCES)
+all: clean comp link
+
+comp:$(SOURCES)
+	$(CC) $(CFLAGS) $(SOURCES)
+
+link:$(OBJECTS)
+	$(LINKER) $(LFLAGS) $(OBJECTS) -I./../Utils/*.o -o $(TARGET).out
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $< -o $@ 
+	$(CC) $(CFLAGS) $< -o $@
+
+%.out : %.o
+	$(LINKER) $(LFLAGS) $< -o $@
 
 clean:
 	rm -rf $(OBJECTS)
+	rm -rf $(TARGET).out
 
 .PHONY: clean  all
 
