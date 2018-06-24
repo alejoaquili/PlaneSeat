@@ -1,9 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include "errorslib.h"
-#include "socketlib.h"
+#include "utils.h"
 #include "connectionHandler.h"
 #include "planeSeatDBHandler.h"
 #include "planeSeatSerialized.h"
@@ -12,22 +10,22 @@
 #define OPERATIONS_QTY 6
 
 
-static void sendFlights(int socketFd);
+static void acceptSendFlights(int connectFd);
 
-static void addFlight(int socketFd);
+static void acceptAddFlight(int connectFd);
 
-static void deleteFlight(int socketFd);
+static void acceptDeleteFlight(int connectFd);
 
-static void addReservation(int socketFd);
+static void acceptAddReservation(int connectFd);
 
-static void deleteReservation(int socketFd);
+static void acceptDeleteReservation(int connectFd);
 
-static void sendFlightDistribution(int socketFd);
+static void acceptSendFlightDistribution(int connectFd);
 
 
 typedef void (* planeSeatOperations_t)(int);
 
-static planeSeatOperations_t planeSeatOperations[OPERATIONS_QTY] = {sendFlights, addFlight, deleteFlight, addReservation, deleteReservation, sendFlightDistribution};
+static planeSeatOperations_t planeSeatOperations[OPERATIONS_QTY] = {acceptSendFlights, acceptAddFlight, acceptDeleteFlight, acceptAddReservation, acceptDeleteReservation, acceptSendFlightDistribution};
 
 static dataBaseADT db = NULL;
 
@@ -41,10 +39,10 @@ int main(int argc , char *argv[])
     int operation, connectFd = atoi(argv[1]);
     char buffer[2];
     
-    while((read(socketFd, buffer, 2) > 0) //deberia ser blockeante 
+    while((read(connectFd, buffer, 2) > 0)) //deberia ser blockeante 
     {
         operation = atoi(buffer);
-        planeSeatOperations[operation](socketFd);
+        planeSeatOperations[operation](connectFd);
     }
     return 0;
 }
@@ -54,24 +52,24 @@ void initializeConnectionHandler(void)
    db = createPlaneSeatDataBaseHandler();
 }
 
-static void sendFlights(int socketFd)
+static void acceptSendFlights(int connectFd)
 {
     int qty;
     flight_t * flights = getFlights(db, &qty);
-    char * flightsText = serializeFlights(flights);
+    char * flightsText = serializeFlights(flights, qty);
     
-    write(socketFd, flightsText, strlen(flightsText));
+    write(connectFd, flightsText, strlen(flightsText));
     
     freeFlights(flights, qty);
     free(flightsText);
 }
 
-static void addFlight(int socketFd)
+static void acceptAddFlight(int connectFd)
 {
     char * data[3];
     for(int i = 0; i < 3; i++)
     {
-        char * string = readStringToDeserialize(socketFd);
+        char * string = readStringToDeserialize(connectFd);
         data[i] = deserializeToString(string);
         free(string);
     }
@@ -79,22 +77,22 @@ static void addFlight(int socketFd)
     freeSpace(3, data[0], data[1], data[2]);
 }
 
-static void deleteFlight(int socketFd)
+static void acceptDeleteFlight(int connectFd)
 {
-    char * string = readStringToDeserialize(socketFd);
+    char * string = readStringToDeserialize(connectFd);
     char * flightNumber = deserializeToString(string);
 
-    deleteFligth(db, flightNumber);
+    deleteFlight(db, flightNumber);
     freeSpace(2, string, flightNumber);
 }
 
-static void addReservation(int socketFd)
+static void acceptAddReservation(int connectFd)
 {
     char * dataString[4];
 
     for(int i = 0; i < 4; i++)
     {
-        char * string = readStringToDeserialize(socketFd);
+        char * string = readStringToDeserialize(connectFd);
         dataString[i] = deserializeToString(string);
         free(string);
     }
@@ -103,13 +101,13 @@ static void addReservation(int socketFd)
     freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
-static void deleteReservation(int socketFd)
+static void acceptDeleteReservation(int connectFd)
 {
     char * dataString[4];
 
     for(int i = 0; i < 4; i++)
     {
-        char * string = readStringToDeserialize(socketFd);
+        char * string = readStringToDeserialize(connectFd);
         dataString[i] = deserializeToString(string);
         free(string);
     }
@@ -118,35 +116,18 @@ static void deleteReservation(int socketFd)
     freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
-static void getFlightDistribution(int socketFd)
+static void acceptSendFlightDistribution(int connectFd)
 {
-    char * string = readStringToDeserialize(socketFd);
-    char * flightNumber = deserialize(string, String);
+    char * string = readStringToDeserialize(connectFd);
     char * flightNumber = deserializeToString(string);
     int qty;
     flightSeat_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
     
     char * fsdText = serializeFlightSeats(fsd, qty);
-    write(socketFd, fsdText, strlen(fsdText));
+    write(connectFd, fsdText, strlen(fsdText));
 
     freeFlightSeatsDistribution(fsd, qty);
     freeSpace(3, string, flightNumber, fsdText);
-}
-
-char * deserializeToString(char * string)
-{
-    arrayADT array = deserialize(string);
-    char * resp = (char *) getValueInArray(array, 0);
-    freeArray(array);
-    return resp;
-}
-
-int deserializeToInt(char * string)
-{
-    arrayADT array = deserialize(string);
-    int resp = *((int *) getValueInArray(array, 0));
-    freeArray(array);
-    return resp;
 }
 
 

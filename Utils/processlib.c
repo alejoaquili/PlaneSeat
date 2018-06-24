@@ -65,14 +65,4 @@ void waitForFds(int lastFd, fd_set fdReadSet)
    	checkFail(result, "select() Failed");
 }
 
-void freeSpace(int qty, ...) 
-{
-	va_list args;
-    va_start(args, qty);
-
-    for (int i = 0; i < qty; i++)
-        free(va_arg(args, void *));
-
-    va_end(args);
-}
 

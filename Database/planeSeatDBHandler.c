@@ -81,7 +81,7 @@ int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * dest
     return result;
 }
 
-int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId)
+int addNewReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber)
 {
     if(!checkFlightReservation(db, flightNumber, colLetter, rowNumber, userId))
         return -1;
@@ -97,7 +97,7 @@ int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int r
     return executeQueryDataBase(db, newQuery, false);
 }
 
-int deleteFligth(dataBaseADT db, char * flightNumber)
+int deleteFlight(dataBaseADT db, char * flightNumber)
 {
     if(db == NULL || flightNumber == NULL)
         return -1;

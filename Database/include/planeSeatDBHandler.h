@@ -29,9 +29,9 @@ dataBaseADT createPlaneSeatDataBaseHandler(void);
 
 int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * destination);
 
-int addNewReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId);
+int addNewReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber);
 
-int deleteFligth(dataBaseADT db, char * flightNumber);
+int deleteFlight(dataBaseADT db, char * flightNumber);
 
 int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber);
 

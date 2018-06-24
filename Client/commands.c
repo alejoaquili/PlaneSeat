@@ -1,13 +1,10 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <sys/socket.h>
 #include "commands.h"
 #include "serialization.h"
-#include "socketlib.h"
-#include "processlib.h"
+#include "utils.h"
 #include "planeSeatSerialized.h"
 #include "planeSeatClientUI.h"
 

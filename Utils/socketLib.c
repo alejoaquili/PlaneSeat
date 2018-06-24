@@ -19,7 +19,7 @@ void bindToPort(int socketFd, int port)
     inAddress.sin_family = PF_INET;
     inAddress.sin_port = (in_port_t)htons(port);
     inAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-    int reuse = 1;
+    //int reuse = 1;
 
     //if(setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int) == -1))
     //	fail("setsockopt(): cannot reuse the socket");
@@ -49,15 +49,5 @@ int connectClientToSocket(int clientSocketFd, int port, char * ip)
 	int result = connect(clientSocketFd, (struct sockaddr *)& inAddress, sizeof(inAddress));
 	checkFail(result, "connect() Failed");
 	return result;
-}
-
-char * readStringToDeserialize(int socketFd)
-{
-    char buffer[10];
-    read(socketFd, buffer, 10);
-    int nbytes = valueOfInt(buffer);
-    char * buffer2 = calloc(1, nbytes);
-    read(socketFd, buffer2, nbytes);
-    return buffer2;
 }
 
