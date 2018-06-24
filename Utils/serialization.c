@@ -1,13 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 // supported data types
 // arrays must be the ones declare in here no native array will be supported
-typedef enum type {Integer, Double, String, Array, Object, Json, Undefined} Type;
+typedef enum type {Integer=0, Double=1, String=2, Array=3, Object=4, Json=5, Undefined=6} Type;
 
 // enumw for decerialization
 typedef enum state {incrementWeight, decrementWeight, addValue, createNode} State;
 typedef enum stateObject {keyState, valueState, endKey} stateObject;
+
+#define HEADER_SIZE 10 // the number of bytes need to string representation of max_int
+
+
 typedef struct arrayNodeCDT{
     struct arrayNodeCDT * next;
     void * value;
@@ -71,7 +76,9 @@ static arrayNodeADT getNodeAt(arrayNodeADT node, int index);
 static arrayNodeADT removeNode(arrayNodeADT node, int index);
 char* arrayNodeToString(arrayNodeADT node);
 char * toString(void * value, Type type);
-
+static void addHeaders(bufferADT buffer, arrayADT array);
+static void addNodeToEndOfArray(arrayADT array, arrayNodeADT node);
+static arrayNodeADT appendNodeToArray(arrayNodeADT current, arrayNodeADT node);
 // primitives string methods
 char* intToString(int number);
 char* doubleToString(double number);
@@ -79,14 +86,15 @@ char* stringToString( char* string);
 char* arrayToString(arrayADT array);
 
 // deserialization for array
+void deserialize(void* destination, char* string, Type type);
 static State getStateArray(char c, int weight);
 arrayADT deserializeArray(char* string);
 void deserializeArrayNodeAt(arrayADT array, int index, Type type);
-arrayADT  parseArray(char* string);
+arrayADT  parseArray(char* string, Type types[]);
 int valueOfInt(char* string);
 double valueOfDouble(char* string);
 char* valueOfString(char* string);
-
+void* getTypeSize(Type type, char* string);// puede que sea static
 static objectADT parseObject(char* string );
 //----------------End of array contract----------------------------------------
 
@@ -160,7 +168,7 @@ void* getValueInArray(arrayADT array ,int index)
     if(array == NULL)
         return NULL;
 
-    return searchForValue(array->first, index);
+    return searchForValue(array->first, array->size-1 - index);// tengo que hacer esto bien
 }
 
 Type getTypeFromIndex(arrayADT array, int index)
@@ -168,7 +176,7 @@ Type getTypeFromIndex(arrayADT array, int index)
     if(array == NULL || index < 0)
         return Undefined;
     
-    arrayNodeADT node = getNodeAt(array->first, index);
+    arrayNodeADT node = getNodeAt(array->first, array->size-1 - index);
     if(node == NULL)
         return Undefined;
     return node->type;
@@ -216,6 +224,7 @@ static arrayNodeADT getNodeAt(arrayNodeADT node, int index)
         return NULL;
     if(index == 0)
         return node;
+    
     return getNodeAt(node->next, index-1);
 }
 
@@ -230,6 +239,23 @@ static arrayNodeADT removeNode(arrayNodeADT node, int index)
     return node;
 }
 
+static void addNodeToEndOfArray(arrayADT array, arrayNodeADT node)
+{
+    if(array == NULL)
+        return;
+    array->first = appendNodeToArray(array->first, node);
+    array->size++;
+}
+
+static arrayNodeADT appendNodeToArray(arrayNodeADT current, arrayNodeADT node)
+{
+    if(current == NULL)
+        return node;
+
+    current->next = appendNodeToArray(current->next, node);
+    return current;
+}
+
 
 // serialization methods
 char* arrayNodeToString(arrayNodeADT node)
@@ -238,6 +264,18 @@ char* arrayNodeToString(arrayNodeADT node)
     return nodeRepresentation;
 }
 
+static void addHeaders(bufferADT buffer, arrayADT array)
+{
+    int numberOfNodes = getArraySize(array);
+    char numberOfAtributes[HEADER_SIZE+1];
+    sprintf(numberOfAtributes,"%10d",numberOfNodes);
+    addToBuffer(buffer, numberOfAtributes,HEADER_SIZE);
+    for(int i = numberOfNodes-1; i >= 0 ; i--)
+    {
+        Type currentType = getTypeFromIndex(array,i);
+        addToBuffer(buffer,intToString(currentType), 1);
+    }
+}
 
 char * toString(void * value, Type type)
 {
@@ -264,6 +302,8 @@ char * toString(void * value, Type type)
     return NULL;
 
 }
+
+
 
 
 
@@ -311,6 +351,8 @@ char* arrayToString(arrayADT array)
     char* comma = ",";
     char* arrayToString;
     bufferADT buffer = newBuffer();
+    // add headers
+    addHeaders(buffer, array);
     addToBuffer(buffer, opening,1);
     for(int i = getArraySize(array)-1 ; i >= 0; i--)
     {
@@ -543,12 +585,21 @@ char * jsonToString(jsonADT json)
 
 arrayADT deserializeArray(char* string)
 {
-    arrayADT array = parseArray(string);
+    char header [HEADER_SIZE] = {0};
+    memcpy(header, string, HEADER_SIZE);
+    int numberOfAtributes = valueOfInt(header);
+    char arrayOfTypes[numberOfAtributes];
+    Type types [numberOfAtributes];
+    for(int i = 0 ; i < numberOfAtributes; i++)
+    {
+        types[i] = *(string + HEADER_SIZE + i)-'0';
+    }
+    arrayADT array = parseArray(string + HEADER_SIZE + numberOfAtributes, types);
     return array;
 }
 
 // no funciona hay que cambiar de estados
-arrayADT  parseArray(char* string)
+arrayADT  parseArray(char* string, Type types[])
 {
     if(string == NULL)
         return NULL;
@@ -556,10 +607,12 @@ arrayADT  parseArray(char* string)
     // i assume the first character is the beginning of an array
     int weight = 1;
     int index = 1;
+    int typeIndex = 0;
     State state;
     arrayADT array = newArray();
     bufferADT buffer = newBuffer();
     void* value;
+    void* deserializeValue;
     do
     {
         char c = *(string + index);
@@ -576,8 +629,14 @@ arrayADT  parseArray(char* string)
             case createNode:
                 value = calloc(getBufferSize(buffer), sizeof(char));
                 getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
-                arrayNodeADT node = newArrayNode(value, Undefined);
-                addNodeToArray(array, node);
+                deserializeValue = getTypeSize(types[typeIndex], value);
+                deserialize(deserializeValue, value, types[typeIndex]);
+                //printf("the value to get is %s\n", *((char**)deserializeValue));
+                free(value);
+                arrayNodeADT node = newArrayNode(deserializeValue, types[typeIndex]);
+                addNodeToEndOfArray(array, node);
+                //addNodeToArray(array,node);
+                typeIndex++;
                 break;
             case decrementWeight:
                 weight--;
@@ -585,8 +644,13 @@ arrayADT  parseArray(char* string)
                 {
                     value = calloc(getBufferSize(buffer), sizeof(char));
                     getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
-                    arrayNodeADT node = newArrayNode(value, Undefined);
-                    addNodeToArray(array, node);
+                    deserializeValue = getTypeSize(types[typeIndex], value);
+                    deserialize(deserializeValue, value, types[typeIndex]);
+                    free(value);
+                    arrayNodeADT node = newArrayNode(deserializeValue, types[typeIndex]);
+                    //printf("the value to get is %s\n", *((char**)deserializeValue));
+                    addNodeToEndOfArray(array, node);
+                    typeIndex++;
                     break;
                 }
                 addToBuffer(buffer, &c, 1);
@@ -646,6 +710,9 @@ void deserialize(void* destination, char* string, Type type)
         case Object:
             printf("not implemented yet\n");
             break;
+        case Json:
+            printf("not implemented yet\n");
+            break;
         case Undefined:
             printf("not implemented!\n");
             memcmp(destination, NULL, sizeof(int));
@@ -664,11 +731,57 @@ void deserializeArrayNodeAt(arrayADT array, int index, Type type)
 }
 
 
+void* getTypeSize(Type type, char* string)
+{
+    int resultInt;
+    double resultDouble;
+    char* resultString;
+    arrayADT resultArray;
+    int size = 0;
+    int count  = 1;
+    switch(type)
+    {
+        case Integer:
+            size = sizeof(int);
+            break;
+        case Double:
+            size =sizeof(double);
+            break;
+        case String:
+            size = sizeof(char);
+            count = strlen(string);
+            break;
+        case Array:
+            size = sizeof(arrayCDT);
+            break;
+        case Object:
+            printf("not implemented yet\n");
+            size = sizeof(objectCDT);
+            break;
+        case Json:
+            printf("not implemented yet\n");
+            size = sizeof(jsonCDT);
+            break;
+        case Undefined:
+            printf("not implemented!\n");
+            break;
+    }
+    return calloc(count, size);
+}
+
+
 // ------------------------ Deserialization of primitives ---------------------
 
 int valueOfInt(char* string)
 {
-    int value = atoi(string);
+    int index = 0;
+    int c = *(string+index);
+    while(!isdigit(c))
+    {
+        index++;
+        c = *(string+index);
+    }
+    int value = atoi(string+index);
     return value;
 }
 
@@ -680,9 +793,9 @@ double valueOfDouble(char* string)
 
 char* valueOfString(char* string)
 {
-    int size = strlen(string);
-    char* copyString = calloc(size, sizeof(char));
-    memcpy(copyString, string, size );
+    int size = strlen(string)-2;// the -2 is to get rid of the "
+    char* copyString = calloc(size+1, sizeof(char));
+    memcpy(copyString, string+1, size ); // the +1 is to skipp "
     return copyString;
 }
 
@@ -748,15 +861,6 @@ static objectADT parseObject(char* string )
 
 
 
-
-
-
-
-
-
-
-
-
 //----------------------------- Tests ---------------------------------
 int test_intToString(void)
 {
@@ -787,18 +891,18 @@ int testNodeArray(void)
 int testArrayToString(void)
 {
     arrayADT array = newArray();
-    char* subject1 =  "poo";
+    int subject1 =  21;
     char* subject2 =  "pi";
     char* subject3 =  "paw";
 
-    arrayNodeADT node1 = newArrayNode(subject1, String);
+    arrayNodeADT node1 = newArrayNode(&subject1, Integer);
     arrayNodeADT node2 = newArrayNode(subject2, String);
     arrayNodeADT node3 = newArrayNode(subject3, String);
     addNodeToArray(array, node1);
     addNodeToArray(array, node2);
     addNodeToArray(array, node3);
     char* string = arrayToString(array);
-    char* expectedResult = "[\"poo\",\"pi\",\"paw\"]";
+    char* expectedResult = "         3220[\"paw\",\"pi\",21]";
     return strcmp(string,expectedResult ) == 0;
 }
 
@@ -826,13 +930,11 @@ int testArrayOfArraytoString(void)
     addNodeToArray(array, nameNode);
     addNodeToArray(array, ageNode);
     arrayNodeADT subjectsNode = newArrayNode(subjects, Array);
-
     addNodeToArray(array, subjectsNode);
     char* string = arrayToString(array);
-    char* expectedResult = "[\"santi\",21,[\"poo\",\"pi\",\"paw\"]]";
+    char* expectedResult = "         3302[         3222[\"paw\",\"pi\",\"poo\"],21,\"santi\"]";
     return strcmp(string,expectedResult ) == 0;
 }
-
 
 int testObjectToString()
 {
@@ -869,6 +971,8 @@ int testBuffer()
 }
 
 
+
+
 //  beginnging of deserialization tests ---------------------------------------
 
 int testvalueOfDouble()
@@ -900,12 +1004,13 @@ int testValueOfString()
 
 int testStringToArray()
 {
-    char* testArray = "[\"santiago\",21,[\"pi\",\"poo\"]]";
-    char* testEasy = "[\"santi\"]";
+    char* testArray ="         3302[         3222[\"paw\",\"pi\",\"poo\"],21,\"santi\"]";
+    char* testEasy = "         3222[\"santi\",\"fran\",\"bian\"]";
     arrayADT array = deserializeArray(testArray);
     printf("the first thing is the size ...%d\n",getArraySize(array));
-    deserializeArrayNodeAt(array, 0, Array);
-    printf("secondly the content .... %d\n",getArraySize(getValueInArray(array, 0)) );
+
+
+    printf("secondly the content .... %s\n", *((char**)getValueInArray(array,0)));
     return 1;
 }
 
@@ -914,7 +1019,7 @@ int testStringToObject()
 {
     char* objectString = "\"name\":\"santiago\"";
     objectADT object = deserializeObject(objectString);
-    printf("the result was... %s", getObjectValue(object));
+    printf("the result was... %s\n", getObjectValue(object));
     return 1;
 }
 
@@ -936,5 +1041,8 @@ int main(void)
     printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
+    //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
+
+
+// funcion serialize(Void*);
