@@ -2,17 +2,17 @@
 #include <stdlib.h>
 #include "errorslib.h"
 #include "planeSeatDBHandler.h"
-#include "seralization.h"
+#include "serialization.h"
 
 char * serializeFlights(flight_t * flights, int qty)
 {
     arrayADT arrayFlights = newArray();
-    for(int i = 0; i < qty, i++)
+    for(int i = 0; i < qty; i++)
     {
         arrayADT flight = newArray();
-        addNodeToArray(flight, newArrayNode(flights[i].flightNumber, String));
-        addNodeToArray(flight, newArrayNode(flights[i].origin, String));
-        addNodeToArray(flight, newArrayNode(flights[i].destination, String));
+        addNodeToArray(flight, newArrayNode(&(flights[i].flightNumber), String));
+        addNodeToArray(flight, newArrayNode(&(flights[i].origin), String));
+        addNodeToArray(flight, newArrayNode(&(flights[i].destination), String));
 
         addNodeToArray(arrayFlights, newArrayNode(flight, Array));
     }
@@ -25,29 +25,29 @@ flight_t * deserializeToFlights(char * flightsText, int * qty)
 {
     arrayADT arrayFlights = deserialize(flightsText);
     *qty = getArraySize(arrayFlights);
-    flightSeats_t * flights = calloc(qty, sizeof(flight_t));
+    flight_t * flights = calloc(*qty, sizeof(flight_t));
 
     for(int i = 0; i < *qty; i++)
     {
-        arrayADT flightArray = (arrayADT *) getValueInArray(arrayFlights, i);
-        flights[i]->flightNumber = (char *) getValueInArray(flightArray, 0);
-        flights[i]->origin = (char *) getValueInArray(flightArray, 1);
-        flights[i]->destination = (char *) getValueInArray(flightArray, 2); 
+        arrayADT flightArray = (arrayADT) getValueInArray(arrayFlights, i);
+        flights[i].flightNumber = (char *) getValueInArray(flightArray, 0);
+        flights[i].origin = (char *) getValueInArray(flightArray, 1);
+        flights[i].destination = (char *) getValueInArray(flightArray, 2); 
     }
     freeArray(arrayFlights);
     return flights;
 }
 
-char * serializeFlightSeats(flightSeats_t * fsd, int qty)
+char * serializeFlightSeats(flightSeat_t * fsd, int qty)
 {
     arrayADT arrayFlightSeats = newArray();
-    for(int i = 0; i < qty, i++)
+    for(int i = 0; i < qty; i++)
     {
         arrayADT seat = newArray();
-        addNodeToArray(seat, newArrayNode(fsd[i].flightNumber, String));
-        addNodeToArray(seat, newArrayNode((int) fsd[i].colLetter, Integer));
-        addNodeToArray(seat, newArrayNode(fsd[i].rowNumber, Integer));
-        addNodeToArray(seat, newArrayNode(fsd[i].occupied, Integer));
+        addNodeToArray(seat, newArrayNode(&(fsd[i].flightNumber), String));
+        addNodeToArray(seat, newArrayNode(&(fsd[i].colLetter), Integer));
+        addNodeToArray(seat, newArrayNode(&(fsd[i].rowNumber), Integer));
+        addNodeToArray(seat, newArrayNode(&(fsd[i].occupied), Integer));
 
         addNodeToArray(arrayFlightSeats, newArrayNode(seat, Array));
     }
@@ -56,19 +56,19 @@ char * serializeFlightSeats(flightSeats_t * fsd, int qty)
     return fsdText;
 }
 
-flightSeats_t * deserializeToFlightSeats(char * fsdText, int * qty)
+flightSeat_t * deserializeToFlightSeats(char * fsdText, int * qty)
 {
     arrayADT arrayFlightSeats = deserialize(fsdText);
     *qty = getArraySize(arrayFlightSeats);
-    flightSeats_t * fsd = calloc(qty, sizeof(flightSeats_t));
+    flightSeat_t * fsd = calloc(*qty, sizeof(flightSeat_t));
 
     for(int i = 0; i < *qty; i++)
     {
-        arrayADT seatArray = (arrayADT *) getValueInArray(arrayFlightSeats, i);
-        fsd[i]->flightNumber = (char *) getValueInArray(seatArray, 0);
-        fsd[i]->colLetter = (char) *((int *) getValueInArray(seatArray, 1));
-        fsd[i]->rowNumber = *((int *) getValueInArray(seatArray, 2));
-        fsd[i]->occupied = *((int *) getValueInArray(seatArray, 3));   
+        arrayADT seatArray = (arrayADT) getValueInArray(arrayFlightSeats, i);
+        fsd[i].flightNumber = (char *) getValueInArray(seatArray, 0);
+        fsd[i].colLetter = (char) *((int *) getValueInArray(seatArray, 1));
+        fsd[i].rowNumber = *((int *) getValueInArray(seatArray, 2));
+        fsd[i].occupied = *((int *) getValueInArray(seatArray, 3));   
     }
     freeArray(arrayFlightSeats);
     return fsd;

@@ -15,8 +15,10 @@ int applyToGetFlights(int clientSocketFd)
 {
 	int qty;
 	flight_t * flights;
-	
-	send(clientSocketFd, itoa(SEND_FLIGHTS), 1);
+	char operation[2];
+	sprintf(operation, "%d", SEND_FLIGHTS);
+
+	send(clientSocketFd, operation, 2);
 
     char * string = readStringToDeserialize(socketFd);
     flights = deserializeToFlights(string, &qty);
@@ -31,8 +33,9 @@ int applyToGetFlights(int clientSocketFd)
 int applyToAddFlight(int clientSocketFd)
 {	
 	char * request[3] = {"flight number", "origin", "destination"};
-	char buffer[BUFFER_LENGTH];
+	char buffer[BUFFER_LENGTH], operation[2];
 	char * flightSerialized[3];
+	sprintf(operation, "%d", ADD_FLIGHT);
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -43,7 +46,7 @@ int applyToAddFlight(int clientSocketFd)
 		flightSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, itoa(ADD_FLIGHT), 1);
+	send(clientSocketFd, operation, 2);
 	for(int i = 0; i < 3; i++)
 	{
 		send(clientSocketFd, flightSerialized[i], strlen(flightSerialized[i]));
@@ -54,9 +57,10 @@ int applyToAddFlight(int clientSocketFd)
 
 int applyToDeleteFlight(int clientSocketFd)
 {	
-	char buffer[BUFFER_LENGTH];
+	char buffer[BUFFER_LENGTH], operation[2];
 	char * flightSerialized;
-        
+	sprintf(operation, "%d", DELETE_FLIGHT);
+
 	printf("Please enter a flight number to delete. Type quit to cancel\n");
 	scanf(buffer, BUFFER_LENGTH);
 
@@ -65,7 +69,7 @@ int applyToDeleteFlight(int clientSocketFd)
 
 	flightSerialized = serializeString(buffer);
 
-	send(clientSocketFd, itoa(DELETE_FLIGHT), 1);
+	send(clientSocketFd, operation, 2);
 	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
 	free(flightSerialized);
     return 0;
@@ -74,8 +78,9 @@ int applyToDeleteFlight(int clientSocketFd)
 int applyToReserve(int clientSocketFd)
 {
 	char * request[4] = {"flight number", "user id", "column letter", "row number"};
-	char buffer[BUFFER_LENGTH];
+	char buffer[BUFFER_LENGTH], operation[2];
 	char * reservationSerialized[4];
+	sprintf(operation, "%d", ADD_RESERVATION);
 	
 	for(int i = 0; i < 4; i++)
 	{
@@ -86,7 +91,7 @@ int applyToReserve(int clientSocketFd)
 		reservationSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, itoa(ADD_RESERVATION), 1);
+	send(clientSocketFd, operation, 2);
 	for(int i = 0; i < 4; i++)
 	{
 		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
@@ -98,8 +103,9 @@ int applyToReserve(int clientSocketFd)
 int applyToCancel(int clientSocketFd)
 {
 	char * request[4] = {"flight number", "user id", "column letter", "row number"};
-	char buffer[BUFFER_LENGTH];
+	char buffer[BUFFER_LENGTH], operation[2];
 	char * reservationSerialized[4];
+	sprintf(operation, "%d", DELETE_RESERVATION);
 	
 	for(int i = 0; i < 4; i++)
 	{
@@ -110,7 +116,7 @@ int applyToCancel(int clientSocketFd)
 		reservationSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, itoa(DELETE_RESERVATION), 1);
+	send(clientSocketFd, operation, 2);
 	for(int i = 0; i < 4; i++)
 	{
 		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
@@ -123,8 +129,9 @@ int applyToPrintFlightDistribution(int clientSocketFd)
 {
 	int qty;
 	flightSeat_t * seats;
-	char buffer[BUFFER_LENGTH];
+	char buffer[BUFFER_LENGTH], operation[2];
 	char * flightSerialized;
+	sprintf(operation, "%d", SEND_FSD);
         
 	printf("Please enter a flight number to print. Type quit to cancel\n");
 	scanf(buffer, BUFFER_LENGTH);
@@ -133,7 +140,7 @@ int applyToPrintFlightDistribution(int clientSocketFd)
 		return 0;
 
 	flightSerialized = serializeString(buffer);
-	send(clientSocketFd, itoa(SEND_FSD), 1);
+	send(clientSocketFd, operation, 2);
 	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
 	free(flightSerialized);
 	

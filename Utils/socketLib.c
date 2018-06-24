@@ -1,7 +1,9 @@
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "socketlib.h"
+#include "serialization.h"
 #include "errorslib.h"
 
 int openSocket(void)

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+
 // supported data types
 // arrays must be the ones declare in here no native array will be supported
 typedef enum type {Integer=0, Double=1, String=2, Array=3, Object=4, Json=5, Undefined=6} Type;
@@ -87,6 +88,8 @@ char* doubleToString(double number);
 char* stringToString( char* string);
 char* arrayToString(arrayADT array);
 
+// serialization for array
+char* serialize(void* obj, Type type);
 // deserialization for array
 void* deserialize(char* string);// para fran
 void deserializeType(void* destination, char* string, Type type);
@@ -128,3 +131,4 @@ char * jsonToString(jsonADT json);
 //------------------------ End of Json Contract -------------------------------
 
 #endif
+

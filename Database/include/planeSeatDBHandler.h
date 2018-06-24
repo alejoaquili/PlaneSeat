@@ -20,7 +20,7 @@ typedef struct flight_t {
 
 typedef struct flightSeat_t{
     char * flightNumber;
-    char colLetter;
+    int colLetter;
     int rowNumber;
     boolean occupied;
 } flightSeat_t;

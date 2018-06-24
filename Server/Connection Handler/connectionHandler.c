@@ -36,12 +36,12 @@ int main(int argc , char *argv[])
 {
     checkAreEquals(argc, 2, "Invalid arguments to Connection Handler");
     if(db == NULL)
-        fail("DataBase not initialized");        
+        initializeConnectionHandler();     
 
     int operation, connectFd = atoi(argv[1]);
-    char buffer[OPERATION_SIZE];
+    char buffer[2];
     
-    while((read(socketFd, buffer, OPERATION_SIZE) > 0) //deberia ser blockeante 
+    while((read(socketFd, buffer, 2) > 0) //deberia ser blockeante 
     {
         operation = atoi(buffer);
         planeSeatOperations[operation](socketFd);
