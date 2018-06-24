@@ -13,7 +13,7 @@ typedef enum type {Integer=0, Double=1, String=2, Array=3, Object=4, Json=5, Und
 typedef enum state {incrementWeight, decrementWeight, addValue, createNode} State;
 typedef enum stateObject {keyState, valueState, endKey} stateObject;
 
-#define HEADER_SIZE 11 // the number of bytes need to string representation of max_int
+#define HEADER_SIZE 10 // the number of bytes need to string representation of max_int
 
 
 typedef struct arrayNodeCDT{
@@ -129,5 +129,9 @@ int addObject(jsonADT json, objectADT object);
 int removeObject(jsonADT json, char* key);
 char * jsonToString(jsonADT json);
 //------------------------ End of Json Contract -------------------------------
+
+// serialization and deserialization primitives independently
+char* deserializeString(char* serializeString);
+char* serializeString(char* string);
 
 #endif

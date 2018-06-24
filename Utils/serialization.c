@@ -275,8 +275,6 @@ char* objectToString(objectADT object)
 
 
 
-
-
 //--------------------- beginning of buffer methods----------------------------
 // this buffer is a stack
 
@@ -760,6 +758,26 @@ void* deserialize(char* string)
 }
 
 
+// this are independent serilization methods
+char* serializeString(char* string)
+{
+    int size = strlen(string);
+    char* serialize = calloc(size + HEADER_SIZE + 1, sizeof(char));
+    sprintf(serialize, "%10d", size);
+    memcpy(serialize+HEADER_SIZE, string, size);
+    return serialize;
+}
+
+
+char* deserializeString(char* serializeString)
+{
+    char header [HEADER_SIZE] = {0};
+    memcpy(header, serializeString, HEADER_SIZE);
+    int size = valueOfInt(header);
+    char* string = calloc(size+1, sizeof(char));
+    memcpy(string, serializeString+HEADER_SIZE, size);
+    return string;
+}
 
 
 //----------------------------- Tests ---------------------------------
@@ -858,6 +876,14 @@ int testJsonToString()
     return strcmp(string, expectedResult) == 0;
 }
 
+int testSerializeString()
+{
+    char* test = "this is a test";
+    char* result = serializeString(test);
+    char* expectedResult = "        14this is a test";
+    return strcmp(expectedResult, result) == 0;
+}
+
 
 int testBuffer()
 {
@@ -950,6 +976,14 @@ int testStringToObject()
     return 1;
 }
 
+int testDeserializeString()
+{
+    char* test = "        14this is a test";
+    char* result = deserializeString(test);
+    char* expectedResult  = "this is a test";
+    return strcmp(expectedResult, result) == 0;
+}
+
 
 int testSerializationDeserialization()
 {
@@ -986,7 +1020,7 @@ int testSerializationDeserialization()
     return 1;
 }
 
-/*
+
 int main(void)
 {
     printf("going to run tests...\n");
@@ -997,17 +1031,19 @@ int main(void)
     printf(" the result was %s\n",(testArrayOfArraytoString() == 0)?"False" : "True");
     printf(" the result was %s\n",(testObjectToString() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testJsonToString() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testSerializeString() == 0)?"False" : "True" );
     printf("DONE! serialization tests\n");
     printf("\n");
     printf("\n");
     printf("Going to test deserializatino...\n");
     printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testDeserializeString() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testSerialize() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testSerializationDeserialization() == 0)?"False" : "True" );
     //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
 
-*/
+
 // funcion serialize(Void*);
