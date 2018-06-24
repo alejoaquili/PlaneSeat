@@ -3,10 +3,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "socketlib.h"
 #include "planeSeatSerialized.h"
 #include "planeSeatClientUI.h"
 
+
+typedef enum {SEND_FLIGHTS = 0, ADD_FLIGHT, DELETE_FLIGHT, ADD_RESERVATION, DELETE_RESERVATION, SEND_FSD} operation_t;
 
 static void printPlane(flightSeat_t * seats);
 
@@ -18,9 +21,9 @@ int applyToGetFlights(int clientSocketFd)
 	char operation[2];
 	sprintf(operation, "%d", SEND_FLIGHTS);
 
-	send(clientSocketFd, operation, 2);
+	write(clientSocketFd, operation, 2);
 
-    char * string = readStringToDeserialize(socketFd);
+    char * string = readStringToDeserialize(clientSocketFd);
     flights = deserializeToFlights(string, &qty);
 
 	printf("This is the list of flights: \n");
@@ -46,10 +49,10 @@ int applyToAddFlight(int clientSocketFd)
 		flightSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, operation, 2);
+	write(clientSocketFd, operation, 2);
 	for(int i = 0; i < 3; i++)
 	{
-		send(clientSocketFd, flightSerialized[i], strlen(flightSerialized[i]));
+		write(clientSocketFd, flightSerialized[i], strlen(flightSerialized[i]));
 		free(flightSerialized[i]);
 	}
     return 0;
@@ -69,8 +72,8 @@ int applyToDeleteFlight(int clientSocketFd)
 
 	flightSerialized = serializeString(buffer);
 
-	send(clientSocketFd, operation, 2);
-	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
+	write(clientSocketFd, operation, 2);
+	write(clientSocketFd, flightSerialized, strlen(flightSerialized));
 	free(flightSerialized);
     return 0;
 }
@@ -91,10 +94,10 @@ int applyToReserve(int clientSocketFd)
 		reservationSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, operation, 2);
+	write(clientSocketFd, operation, 2);
 	for(int i = 0; i < 4; i++)
 	{
-		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
+		write(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
 		free(reservationSerialized[i]);
 	}
     return 0;
@@ -116,10 +119,10 @@ int applyToCancel(int clientSocketFd)
 		reservationSerialized[i] = serializeString(buffer);
 	}
 
-	send(clientSocketFd, operation, 2);
+	write(clientSocketFd, operation, 2);
 	for(int i = 0; i < 4; i++)
 	{
-		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
+		write(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
 		free(reservationSerialized[i]);
 	}
     return 0;
@@ -140,17 +143,18 @@ int applyToPrintFlightDistribution(int clientSocketFd)
 		return 0;
 
 	flightSerialized = serializeString(buffer);
-	send(clientSocketFd, operation, 2);
-	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
+	write(clientSocketFd, operation, 2);
+	write(clientSocketFd, flightSerialized, strlen(flightSerialized));
 	free(flightSerialized);
 	
-    char * string = readStringToDeserialize(socketFd);
+    char * string = readStringToDeserialize(clientSocketFd);
     seats = deserializeToFlightSeats(string, &qty);
 
 	printPlane(seats);
 
-    freeFlightSeatsDistribution(fsd, qty);
+    freeFlightSeatsDistribution(seats, qty);
     free(string);
+	return 0;
 }
 
 

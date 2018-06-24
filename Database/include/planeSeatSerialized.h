@@ -9,9 +9,9 @@ char * serializeFlights(flight_t * flights, int qty);
 
 flight_t * deserializeToFlights(char * flightsText, int * qty);
 
-char * serializeFlightSeats(flightSeats_t * fsd, int qty);
+char * serializeFlightSeats(flightSeat_t * fsd, int qty);
 
-flightSeats_t * deserializeToFlightSeats(char * fsdText, int * qty);
+flightSeat_t * deserializeToFlightSeats(char * fsdText, int * qty);
 
 
 #endif

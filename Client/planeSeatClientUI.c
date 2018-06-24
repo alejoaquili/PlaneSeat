@@ -1,12 +1,30 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "planeSeatClientUI.h"
 #include "planeSeatDBHandler.h"
 #include "utils.h"
 #include "commands.h"
 
+#define BUFFER_LENGTH 256
+#define COMMAND_QTY 7
+#define VALID_COMMAND 0
+#define INVALID_COMMAND -1
 
-#define COMMAND_QTY 6
+typedef struct command_t{
+    char * name;
+    char* description;
+    int (*function)(int clientSocketFd);
+} command_t;
+
+static int run(const char * name, command_t * commands, int clientSocketFd);
+
+static void validate(int input);
+
+static int extractCommand(char * command, const char * buffer);
+
+static int help(int clientSocketFd);
+
 
 static command_t commands[COMMAND_QTY] = {
     {"help", " ", help}, 
@@ -17,15 +35,6 @@ static command_t commands[COMMAND_QTY] = {
     {"cancel reservation", "Cancel a seat reservation for a flight.", applyToCancel},
     {"print flight", "Shows the seats of a flight.", applyToPrintFlightDistribution}
 };
-
-
-static int run(const char * name, command_t * commands, int clientSocketFd);
-
-static void validate(int input);
-
-static int extractCommand(char * command, const char * buffer);
-
-static int help(int clientSocketFd);
 
 
 int planeSeatClientUI(int clientSocketFd)

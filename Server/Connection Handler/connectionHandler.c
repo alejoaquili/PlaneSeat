@@ -60,7 +60,7 @@ static void sendFlights(int socketFd)
     flight_t * flights = getFlights(db, &qty);
     char * flightsText = serializeFlights(flights);
     
-    send(socketFd, flightsText, strlen(flightsText));
+    write(socketFd, flightsText, strlen(flightsText));
     
     freeFlights(flights, qty);
     free(flightsText);
@@ -127,7 +127,7 @@ static void getFlightDistribution(int socketFd)
     flightSeats_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
     
     char * fsdText = serializeFlightSeats(fsd, qty);
-    send(socketFd, fsdText, strlen(fsdText));
+    write(socketFd, fsdText, strlen(fsdText));
 
     freeFlightSeatsDistribution(fsd, qty);
     freeSpace(3, string, flightNumber, fsdText);

@@ -1,9 +1,9 @@
 all: clean comp run
 comp: 
+	cd Client; make all
 	cd Database; make all
 	cd Utils; make all
 	cd Server; make all
-	cd Client; make all
 
 clean:
 	cd Client; make clean

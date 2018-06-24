@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "socketlib.h"
-#include "planeSeatClientUI"
+#include "planeSeatClientUI.h"
 
 #define PORT 7200
 #define IP "127.0.0.1"
