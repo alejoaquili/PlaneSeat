@@ -1,4 +1,4 @@
-#include "serialization.h"
+#include "Include/serialization.h"
 // Array strucutre methods
 
 arrayADT newArray()
@@ -139,6 +139,8 @@ char* arrayNodeToString(arrayNodeADT node)
     return nodeRepresentation;
 }
 
+
+// should make this function genereic for every type 
 static void addHeaders(bufferADT buffer, arrayADT array)
 {
     int numberOfNodes = getArraySize(array);
@@ -150,6 +152,8 @@ static void addHeaders(bufferADT buffer, arrayADT array)
         Type currentType = getTypeFromIndex(array,i);
         addToBuffer(buffer,intToString(currentType), 1);
     }
+    // add the type of structurefor this object
+    
 }
 
 char * toString(void * value, Type type)
@@ -224,7 +228,6 @@ char* arrayToString(arrayADT array)
     char* opening = "[";
     char* closing = "]";
     char* comma = ",";
-    char* arrayToString;
     bufferADT buffer = newBuffer();
     // add headers
     addHeaders(buffer, array);
@@ -303,14 +306,20 @@ int addToBuffer(bufferADT buffer,void* value, int size)
         return -1;
 
     addSpaceToBuffer(buffer, size);
-    return memcpy(buffer->buffer+buffer->size - size,value, size ) != NULL;   
+    long direction = (long)buffer->buffer + (long)buffer->size;
+    direction = direction - size;
+    //return memcpy(buffer->buffer+buffer->size - size,value, size ) != NULL;   
+    return memcpy((void*) direction,value, size ) != NULL;  
 }
 
 
 
 void getLastFromBuffer(bufferADT buffer, void* destination, int size)
 {
-    memcpy(destination, buffer->buffer+buffer->size - size, size);
+    long direction = (long) buffer->buffer + (long) buffer->size;
+    direction = direction - size;
+    //memcpy(destination, buffer->buffer+buffer->size - size, size);
+    memcpy(destination, (void*)direction, size);
     buffer->size -= size;    
 }
 
@@ -397,7 +406,6 @@ int addObject(jsonADT json, objectADT object)
 
     arrayADT array  = json->nodes;
     arrayNodeADT node = newArrayNode(object, Object);
-    char* aux =  arrayNodeToString(node);
     int result = addNodeToArray(array, node);
     if(result != 0)
         json->size++;
@@ -463,7 +471,6 @@ arrayADT deserializeArray(char* string)
     char header [HEADER_SIZE] = {0};
     memcpy(header, string, HEADER_SIZE);
     int numberOfAtributes = valueOfInt(header);
-    char arrayOfTypes[numberOfAtributes];
     Type types [numberOfAtributes];
     for(int i = 0 ; i < numberOfAtributes; i++)
     {
@@ -607,10 +614,7 @@ void deserializeArrayNodeAt(arrayADT array, int index, Type type)
 
 void* getTypeSize(Type type, char* string)
 {
-    int resultInt;
-    double resultDouble;
-    char* resultString;
-    arrayADT resultArray;
+
     int size = 0;
     int count  = 1;
     switch(type)
@@ -928,7 +932,7 @@ int testValueOfString()
 int testStringToArray()
 {
     char* testArray ="         3302[         3222[\"paw\",\"pi\",\"poo\"],21,\"santi\"]";
-    char* testEasy = "         3222[\"santi\",\"fran\",\"bian\"]";
+    //char* testEasy = "         3222[\"santi\",\"fran\",\"bian\"]";
     arrayADT array = deserializeArray(testArray);
     printf("the first thing is the size ...%d\n",getArraySize(array));
 
