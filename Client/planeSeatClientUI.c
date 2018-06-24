@@ -39,7 +39,6 @@ int planeSeatClientUI(int clientSocketFd)
         if (buffer[0] != '\0') 
         { 
             extractCommand(command, buffer);
-            printf("Command:%s\n",command);
             resp = run(command, commands, clientSocketFd); 
             validate(resp);
         }

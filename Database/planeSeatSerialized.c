@@ -10,10 +10,9 @@ char * serializeFlights(flight_t * flights, int qty)
     for(int i = 0; i < qty; i++)
     {
         arrayADT flight = newArray();
-        addNodeToArray(flight, newArrayNode(&(flights[i].flightNumber), String));
-        addNodeToArray(flight, newArrayNode(&(flights[i].origin), String));
-        addNodeToArray(flight, newArrayNode(&(flights[i].destination), String));
-
+        addNodeToArray(flight, newArrayNode((flights[i].flightNumber), String));
+        addNodeToArray(flight, newArrayNode((flights[i].origin), String));
+        addNodeToArray(flight, newArrayNode((flights[i].destination), String));
         addNodeToArray(arrayFlights, newArrayNode(flight, Array));
     }
     char * flightsText = serialize(arrayFlights, Array);
