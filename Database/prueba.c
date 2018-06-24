@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "planeSeatDBHandler.h"
-
+/*
 int main(void)
 {
 	dataBaseADT db = createPlaneSeatDataBaseHandler();
@@ -29,8 +29,9 @@ int main(void)
 	for(int i = 0; i < qty ; i ++)
 	{
 		printf("FlightSeat: %s, %c, %d, %d\n",fsd[i].flightNumber, fsd[i].colLetter, fsd[i].rowNumber, fsd[i].occupied);
-	}*/
+	}
 
 	deleteDataBase(db, true);
-}
 
+}
+*/
