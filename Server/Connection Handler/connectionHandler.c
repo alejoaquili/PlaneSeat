@@ -7,7 +7,7 @@
 #include "connectionHandler.h"
 #include "planeSeatDBHandler.h"
 #include "planeSeatSerialized.h"
-#include "seralization.h"
+#include "serialization.h"
 
 #define OPERATIONS_QTY 6
 
@@ -124,7 +124,7 @@ static void getFlightDistribution(int socketFd)
     char * flightNumber = deserialize(string, String);
     char * flightNumber = deserializeToString(string);
     int qty;
-    flightSeats_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
+    flightSeat_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
     
     char * fsdText = serializeFlightSeats(fsd, qty);
     write(socketFd, fsdText, strlen(fsdText));

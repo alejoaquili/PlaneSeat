@@ -9,6 +9,7 @@ all: clean comp link
 
 comp:$(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES)
+	cd Connection\ Handler; make all
 
 link:$(OBJECTS)
 	$(LINKER) $(LFLAGS) $(OBJECTS) ./../Utils/*.o -o $(TARGET).out

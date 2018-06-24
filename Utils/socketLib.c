@@ -21,8 +21,8 @@ void bindToPort(int socketFd, int port)
     inAddress.sin_addr.s_addr = htonl(INADDR_ANY);
     int reuse = 1;
 
-    if(setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int) == -1))
-    	fail("setsockopt(): cannot reuse the socket");
+    //if(setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int) == -1))
+    //	fail("setsockopt(): cannot reuse the socket");
 
     int result = bind(socketFd, (struct sockaddr *) &inAddress, sizeof(inAddress));
     checkFail(result, "bind(): the port is currently in use");
