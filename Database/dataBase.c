@@ -56,7 +56,11 @@ dataBaseADT openDataBase(char * dBName)
     if(dBName == NULL || strcmp(dBName, ":memory:") == 0)
         return NULL;
     dataBaseADT dataBase = malloc(sizeof(dataBaseCDT));
-
+    
+    dataBase->errorMessage = NULL;
+    dataBase->statement = NULL;
+    dataBase->returnCode = sqlite3_open(dBName, &dataBase->db);
+    
     if(dataBase->returnCode) 
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(dataBase->db));

@@ -27,27 +27,27 @@ static	char * createReservationTableQuery = "CREATE TABLE reservation(" \
 
 static char * insertFlightFmt = "INSERT INTO flight (flightNumber, origin, destination) VALUES(";
 
-static int insertFlightFmtSize = 0;
+static int insertFlightFmtSize = 62;
 
 static char * insertFlightSeatsFmt = "INSERT INTO flightSeats (flightNumber, colLetter, rowNumber, occupied) VALUES(";
 
-static int insertFlightSeatsFmtSize = 0;
+static int insertFlightSeatsFmtSize = 78;
 
 static char * insertReservationFmt = "INSERT INTO reservation (flightNumber, userId, colLetter, rowNumber) VALUES(";
 
-static int insertReservationFmtSize = 0;
+static int insertReservationFmtSize = 76;
 
 static char * deleteFromFlightFmt = "DELETE FROM flight WHERE flightNumber = ";
 
-static int deleteFromFlightFmtSize = 0;
+static int deleteFromFlightFmtSize = 40;
 
 static char * updateFlightSeatsFmt = "UPDATE flightSeats SET occupied = ";
 
-static int updateFlightSeatsFmtSize = 0;
+static int updateFlightSeatsFmtSize = 34;
 
 static char * deleteFromReservationFmt = "DELETE FROM reservation WHERE flightNumber = ";
 
-static int deleteFromReservationFmtSize = 0;
+static int deleteFromReservationFmtSize = 45;
 
 static int createTables(dataBaseADT db);
 static int addNewFlightSeats(dataBaseADT db, char * flightNumber);
@@ -59,12 +59,6 @@ dataBaseADT createPlaneSeatDataBaseHandler(void)
     dataBaseADT db = createDataBase(DB_NAME, true);
     if(createTables(db) < 0)
         return NULL;
-    insertFlightFmtSize = strlen(insertFlightFmt);
-    insertFlightSeatsFmtSize = strlen(insertFlightSeatsFmt);
-    insertReservationFmtSize = strlen(insertReservationFmt);
-    updateFlightSeatsFmtSize = strlen(updateFlightSeatsFmt);
-    deleteFromFlightFmtSize = strlen(deleteFromFlightFmt);
-    deleteFromReservationFmtSize = strlen(deleteFromReservationFmt);
     return db;
 }
 

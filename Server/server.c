@@ -30,6 +30,7 @@ int main(int argc , char *argv[])
     checkFail(listenFd, "Error in listener\n");
     bindToPort(listenFd, PORT);
     checkFail(listen(listenFd, 10) == -1, "Unable to linten in this port\n");
+    createPlaneSeatDataBaseHandler();
 
     while(1)
     {

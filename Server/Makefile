@@ -12,7 +12,7 @@ comp:$(SOURCES)
 	cd Connection\ Handler; make all
 
 link:$(OBJECTS)
-	$(LINKER) $(LFLAGS) $(OBJECTS) ./../Utils/*.o -o $(TARGET).out
+	$(LINKER) $(LFLAGS) $(OBJECTS) ./../Utils/*.o ./../Database/*.o -o $(TARGET).out
 
 %.o : %.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -23,6 +23,7 @@ link:$(OBJECTS)
 clean:
 	rm -rf $(OBJECTS)
 	rm -rf $(TARGET).out
+	cd Connection\ Handler; make clean
 
 .PHONY: clean  all
 

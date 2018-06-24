@@ -32,17 +32,14 @@ static dataBaseADT db = NULL;
 
 int main(int argc , char *argv[])
 {
-
     checkAreEquals(argc, 2, "Invalid arguments to Connection Handler");
-    if(db == NULL)
-        initializeConnectionHandler();     
+    db = openDataBase(DB_NAME);  
 
     int operation, connectFd = atoi(argv[0]);
     char buffer[2];
     
     while((read(connectFd, buffer, 2) > 0)) //deberia ser blockeante 
     {
-        printf("%s\n", buffer);
         operation = atoi(buffer);
         planeSeatOperations[operation](connectFd);
     }
@@ -70,15 +67,10 @@ static void acceptAddFlight(int connectFd)
 {
     char * data[3];
     for(int i = 0; i < 3; i++)
-    {    
         data[i] = readStringToDeserialize(connectFd);
-        printf("ST%d: %s\n", i, data[i]);
-    }
-    printf("ASDASD\n");
+
     addNewFlight(db, data[0], data[1], data[2]);
-    printf("ASDASD\n");
-    //freeSpace(3, data[0], data[1], data[2]);
-    //printf("ASDASD\n");
+    freeSpace(3, data[0], data[1], data[2]);
 }
 
 static void acceptDeleteFlight(int connectFd)
@@ -95,8 +87,8 @@ static void acceptAddReservation(int connectFd)
     for(int i = 0; i < 4; i++)
         dataString[i] = readStringToDeserialize(connectFd);
 
-    addNewReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
-    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
+    addNewReservation(db, dataString[0], dataString[1], dataString[2], atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], *dataString[2], dataString[3]);
 }
 
 static void acceptDeleteReservation(int connectFd)
@@ -106,8 +98,8 @@ static void acceptDeleteReservation(int connectFd)
     for(int i = 0; i < 4; i++)
         dataString[i] = readStringToDeserialize(connectFd);
 
-    deleteReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
-    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
+    deleteReservation(db, dataString[0], dataString[1], dataString[2], atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], *dataString[2], dataString[3]);
 }
 
 static void acceptSendFlightDistribution(int connectFd)
