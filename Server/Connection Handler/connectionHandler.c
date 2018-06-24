@@ -70,22 +70,22 @@ static void acceptAddFlight(int connectFd)
 {
     char * data[3];
     for(int i = 0; i < 3; i++)
-    {
-        char * string = readStringToDeserialize(connectFd);
-        data[i] = deserializeToString(string);
-        free(string);
+    {    
+        data[i] = readStringToDeserialize(connectFd);
+        printf("ST%d: %s\n", i, data[i]);
     }
+    printf("ASDASD\n");
     addNewFlight(db, data[0], data[1], data[2]);
-    freeSpace(3, data[0], data[1], data[2]);
+    printf("ASDASD\n");
+    //freeSpace(3, data[0], data[1], data[2]);
+    //printf("ASDASD\n");
 }
 
 static void acceptDeleteFlight(int connectFd)
 {
-    char * string = readStringToDeserialize(connectFd);
-    char * flightNumber = deserializeToString(string);
-
+    char * flightNumber = readStringToDeserialize(connectFd);
     deleteFlight(db, flightNumber);
-    freeSpace(2, string, flightNumber);
+    free(flightNumber);
 }
 
 static void acceptAddReservation(int connectFd)
@@ -93,11 +93,7 @@ static void acceptAddReservation(int connectFd)
     char * dataString[4];
 
     for(int i = 0; i < 4; i++)
-    {
-        char * string = readStringToDeserialize(connectFd);
-        dataString[i] = deserializeToString(string);
-        free(string);
-    }
+        dataString[i] = readStringToDeserialize(connectFd);
 
     addNewReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
     freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
@@ -108,11 +104,7 @@ static void acceptDeleteReservation(int connectFd)
     char * dataString[4];
 
     for(int i = 0; i < 4; i++)
-    {
-        char * string = readStringToDeserialize(connectFd);
-        dataString[i] = deserializeToString(string);
-        free(string);
-    }
+        dataString[i] = readStringToDeserialize(connectFd);
 
     deleteReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
     freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
@@ -120,8 +112,7 @@ static void acceptDeleteReservation(int connectFd)
 
 static void acceptSendFlightDistribution(int connectFd)
 {
-    char * string = readStringToDeserialize(connectFd);
-    char * flightNumber = deserializeToString(string);
+    char * flightNumber = readStringToDeserialize(connectFd);
     int qty;
     flightSeat_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
     
@@ -129,7 +120,7 @@ static void acceptSendFlightDistribution(int connectFd)
     write(connectFd, fsdText, strlen(fsdText));
 
     freeFlightSeatsDistribution(fsd, qty);
-    freeSpace(3, string, flightNumber, fsdText);
+    freeSpace(2, flightNumber, fsdText);
 }
 
 
