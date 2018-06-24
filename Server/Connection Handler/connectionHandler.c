@@ -2,38 +2,50 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
 #include "errorslib.h"
+#include "connectionHandler.h"
 #include "planeSeatDBHandler.h"
+#include "planeSeatSerialized.h"
 #include "seralization.h"
 
 #define OPERATIONS_QTY 6
-typedef enum {SEND_FLIGHTS = 0, ADD_FLIGHT, DELETE_FLIGHT, ADD_RESERVATION, DELETE_RESERVATION, GET_FSD} operation_t;
-
-typedef struct message_t
-{
-    operation_t operation;
-    size_t size;
-} message_t;
-
-typedef void (* planeSeatOperations_t)(int, int);
 
 
-static planeSeatOperations_t planeSeatOperations[OPERATIONS_QTY] = {sendFlights,  };
+static void sendFlights(int socketFd);
 
-static dataBaseADT db;
+static void addFlight(int socketFd);
+
+static void deleteFlight(int socketFd);
+
+static void addReservation(int socketFd);
+
+static void deleteReservation(int socketFd);
+
+static void sendFlightDistribution(int socketFd);
+
+static char * readStringToDeserialize(int socketFd);
+
+
+typedef void (* planeSeatOperations_t)(int);
+
+static planeSeatOperations_t planeSeatOperations[OPERATIONS_QTY] = {sendFlights, addFlight, deleteFlight, addReservation, deleteReservation, sendFlightDistribution};
+
+static dataBaseADT db = NULL;
 
 
 int main(int argc , char *argv[])
 {
     checkAreEquals(argc, 2, "Invalid arguments to Connection Handler");
-    int connectFd = atoi(argv[1]);
-    message_t msg;
-    char buffer[MSG_SIZE]; 
-    while(read(socketFd, buffer, sizeofSerialization(message_t)) > 0) //deberia ser blockeante o esperar un mensage quit
+    if(db == NULL)
+        fail("DataBase not initialized");        
+
+    int operation, connectFd = atoi(argv[1]);
+    char buffer[OPERATION_SIZE];
+    
+    while((read(socketFd, buffer, OPERATION_SIZE) > 0) //deberia ser blockeante 
     {
-        deserializer(buffer, &msg);
-        planeSeatOperations[msg->operation](socketFd, msg->size);
+        operation = atoi(buffer);
+        planeSeatOperations[operation](socketFd);
     }
     return 0;
 }
@@ -43,50 +55,120 @@ void initializeConnectionHandler(void)
    db = createPlaneSeatDataBaseHandler();
 }
 
-void sendFlights(int socketFd, int size)
+static void sendFlights(int socketFd)
 {
     int qty;
     flight_t * flights = getFlights(db, &qty);
-    char * flightsText = serializate(flights);
+    char * flightsText = serializeFlights(flights);
+    
     send(socketFd, flightsText, strlen(flightsText));
+    
     freeFlights(flights, qty);
+    free(flightsText);
 }
 
-void addFlight(int socketFd, int size)
+static void addFlight(int socketFd)
 {
-
-
+    char * data[3];
+    for(int i = 0; i < 3; i++)
+    {
+        char * string = readStringToDeserialize(socketFd);
+        data[i] = deserializeToString(string);
+        free(string);
+    }
+    addNewFlight(db, data[0], data[1], data[2]);
+    freeSpace(3, data[0], data[1], data[2]);
 }
 
-
-void deleteFlight(int socketFd, int size)
+static void deleteFlight(int socketFd)
 {
-    char buffer[MSG_SIZE] = 
+    char * string = readStringToDeserialize(socketFd);
+    char * flightNumber = deserializeToString(string);
 
+    deleteFligth(db, flightNumber);
+    freeSpace(2, string, flightNumber);
 }
 
-
-void addReservation(int socketFd, int size)
+static void addReservation(int socketFd)
 {
+    char * dataString[2];
+    int dataInt[2];
+    for(int i = 0; i < 3; i++)
+    {
+        char * string = readStringToDeserialize(socketFd);
+        dataString[i] = deserializeToString(string);
+        free(string);
+    }
+    for(int i = 0; i < 3; i++)
+    {
+        char * string = readStringToDeserialize(socketFd);
+        dataInt[i] = deserializeToString(string);
+        free(string);
+    }
 
-
+    addNewReservation(db, dataString[0], dataString[1], dataInt[0], dataInt[1]);
+    freeSpace(2, dataString[0], dataString[1]);
 }
 
-void deleteReservation(int socketFd, int size)
+static void deleteReservation(int socketFd)
 {
+    char * dataString[2];
+    int dataInt[2];
+    for(int i = 0; i < 3; i++)
+    {
+        char * string = readStringToDeserialize(socketFd);
+        dataString[i] = deserializeToString(string);
+        free(string);
+    }
+    for(int i = 0; i < 3; i++)
+    {
+        char * string = readStringToDeserialize(socketFd);
+        dataInt[i] = deserializeToString(string);
+        free(string);
+    }
 
-
+    deleteReservation(db, dataString[0], dataString[1], dataInt[0], dataInt[1]);
+    freeSpace(2, dataString[0], dataString[1]);
 }
 
-
-void getFlightDistribution(int socketFd, int size)
+static void getFlightDistribution(int socketFd)
 {
-    char * flightNumber = deserializer(size);// nose como levantamos el flight
+    char * string = readStringToDeserialize(socketFd);
+    char * flightNumber = deserializeToString(string);
     int qty;
     flightSeats_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
-    char * fsdText = serializate(fsd);
+    
+    char * fsdText = serializeFlightSeats(fsd, qty);
     send(socketFd, fsdText, strlen(fsdText));
+
     freeFlightSeatsDistribution(fsd, qty);
+    freeSpace(3, string, flightNumber, fsdText);
+}
+
+char * deserializeToString(char * string)
+{
+    arrayADT array = deserialize(string);
+    char * resp = (char *) getValueInArray(array, 0);
+    freeArray(array);
+    return resp;
+}
+
+int deserializeToInt(char * string)
+{
+    arrayADT array = deserialize(string);
+    int resp = *((int *) getValueInArray(array, 0));
+    freeArray(array);
+    return resp;
+}
+
+static char * readStringToDeserialize(int socketFd)
+{
+    char buffer[10];
+    read(socketFd, buffer, 10);
+    int nbytes = valueOfInt(buffer);
+    char * buffer2 = calloc(1, nbytes);
+    read(socketFd, buffer2, nbytes);
+    return buffer2;
 }
 
 
