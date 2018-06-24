@@ -119,7 +119,8 @@ static void addNodeToEndOfArray(arrayADT array, arrayNodeADT node)
     if(array == NULL)
         return;
     array->first = appendNodeToArray(array->first, node);
-    array->size++;
+    if(node == NULL)
+        array->size++;
 }
 
 static arrayNodeADT appendNodeToArray(arrayNodeADT current, arrayNodeADT node)
