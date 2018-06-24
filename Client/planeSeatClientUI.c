@@ -17,12 +17,12 @@ static int help(int clientSocketFd);
 
 static command_t commands[COMMAND_QTY] = {
     {"help", " ", help}, 
-    {"get flights", "Shows the list of flight on the system.", applyToGetFlights},
-    {"add flight", "Add a new flight to the system.", applyToAddFlight},
-    {"delete flight", "Delete a flight from the system.", applyToDeleteFlight},
-    {"make reservation", "Make a seat reservation for a flight.", applyToReserve},
-    {"cancel reservation", "Cancel a seat reservation for a flight.", applyToCancel},
-    {"print flight", "Shows the seats of a flight.", applyToPrintFlightDistribution}
+    {"getFlights", "Shows the list of flight on the system.", applyToGetFlights},
+    {"addFlight", "Add a new flight to the system.", applyToAddFlight},
+    {"deleteFlight", "Delete a flight from the system.", applyToDeleteFlight},
+    {"makeReservation", "Make a seat reservation for a flight.", applyToReserve},
+    {"cancelReservation", "Cancel a seat reservation for a flight.", applyToCancel},
+    {"printFlight", "Shows the seats of a flight.", applyToPrintFlightDistribution}
 };
 
 
@@ -34,17 +34,18 @@ int planeSeatClientUI(int clientSocketFd)
 	do
     {
         printf("\n$ >> ");
-        scanf(buffer, BUFFER_LENGTH);
+        scanf("%s",buffer);
 
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
+        if (buffer[0] != '\0') 
         { 
             extractCommand(command, buffer);
+            printf("Command:%s\n",command);
             resp = run(command, commands, clientSocketFd); 
             validate(resp);
         }
         CLEAN_BUFFER
     }
-    while(buffer[0] != '\0' && !IS_QUIT(buffer));
+    while(1);
 	return 0;
 }
 
@@ -70,7 +71,7 @@ static void validate(int input)
 static int extractCommand(char * command, const char * buffer) 
 {
     int i = 0;
-    for (i = 0; buffer[i] != '\0' && buffer[i] != ' '; i++)
+    for (i = 0; buffer[i] != '\0' && buffer[i] != ' ' ; i++)
         command[i] = buffer[i];
     command[i] = '\0';
     return i;

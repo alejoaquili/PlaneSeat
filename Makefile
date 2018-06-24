@@ -11,6 +11,7 @@ clean:
 	cd Utils; make clean
 	cd Database; make clean
 	cd Test; make clean
+	rm -rf planeSeat
 
 run: 
 	chmod 777 run.sh	

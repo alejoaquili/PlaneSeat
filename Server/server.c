@@ -41,7 +41,7 @@ int main(int argc , char *argv[])
             case 0:
                 close(listenFd);
                 sem_close(semaphore);
-                execlp(CONECTION_HANDLER, fdArg, ((char *)NULL));
+                execlp(CONECTION_HANDLER, fdArg, " ", ((char *)NULL));
 
                 fail("exec() Failed");
                 close(connectFd);
