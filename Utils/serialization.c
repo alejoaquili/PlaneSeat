@@ -86,7 +86,8 @@ char* stringToString( char* string);
 char* arrayToString(arrayADT array);
 
 // deserialization for array
-void deserialize(void* destination, char* string, Type type);
+void* deserialize(char* string);// para fran
+void deserializeType(void* destination, char* string, Type type);
 static State getStateArray(char c, int weight);
 arrayADT deserializeArray(char* string);
 void deserializeArrayNodeAt(arrayADT array, int index, Type type);
@@ -267,7 +268,7 @@ char* arrayNodeToString(arrayNodeADT node)
 static void addHeaders(bufferADT buffer, arrayADT array)
 {
     int numberOfNodes = getArraySize(array);
-    char numberOfAtributes[HEADER_SIZE+1];
+    char numberOfAtributes[HEADER_SIZE+1] = {0};
     sprintf(numberOfAtributes,"%10d",numberOfNodes);
     addToBuffer(buffer, numberOfAtributes,HEADER_SIZE);
     for(int i = numberOfNodes-1; i >= 0 ; i--)
@@ -630,7 +631,7 @@ arrayADT  parseArray(char* string, Type types[])
                 value = calloc(getBufferSize(buffer), sizeof(char));
                 getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
                 deserializeValue = getTypeSize(types[typeIndex], value);
-                deserialize(deserializeValue, value, types[typeIndex]);
+                deserializeType(deserializeValue, value, types[typeIndex]);
                 //printf("the value to get is %s\n", *((char**)deserializeValue));
                 free(value);
                 arrayNodeADT node = newArrayNode(deserializeValue, types[typeIndex]);
@@ -645,7 +646,7 @@ arrayADT  parseArray(char* string, Type types[])
                     value = calloc(getBufferSize(buffer), sizeof(char));
                     getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
                     deserializeValue = getTypeSize(types[typeIndex], value);
-                    deserialize(deserializeValue, value, types[typeIndex]);
+                    deserializeType(deserializeValue, value, types[typeIndex]);
                     free(value);
                     arrayNodeADT node = newArrayNode(deserializeValue, types[typeIndex]);
                     //printf("the value to get is %s\n", *((char**)deserializeValue));
@@ -682,7 +683,7 @@ static State getStateArray(char c, int weight)
 }
 
 
-void deserialize(void* destination, char* string, Type type)
+void deserializeType(void* destination, char* string, Type type)
 {
     int resultInt;
     double resultDouble;
@@ -726,7 +727,7 @@ void deserializeArrayNodeAt(arrayADT array, int index, Type type)
         return;
     
     arrayNodeADT node = getNodeAt(array->first, index);
-    deserialize(node->value, node->value, type);
+    deserializeType(node->value, node->value, type);
     node->type = type;
 }
 
@@ -859,6 +860,28 @@ static objectADT parseObject(char* string )
 // ---------------------- End of deserialization mathods ----------------------
 
 
+// Global funcitons for serializign and deserializing
+
+char* serialize(void* obj, Type type)
+{
+    char * serialization = toString(obj, type);
+    char sizeOfSerializationString [HEADER_SIZE+1]= {0}; 
+    int size = strlen(serialization);
+    sprintf(sizeOfSerializationString,"%10d",size);
+    char * serializedString = calloc(size+HEADER_SIZE, sizeof(char));
+    strcat(serializedString, sizeOfSerializationString);
+    strcat(serializedString, serialization);
+    printf("%s\n", serializedString);
+    return serializedString;
+}
+
+// por ahora solo desserializa arrays porque fran lo usa asi
+void* deserialize(char* string)
+{
+    return deserializeArray(string);
+}
+
+
 
 
 //----------------------------- Tests ---------------------------------
@@ -970,7 +993,33 @@ int testBuffer()
     return strcmp(str, testString) == 0;
 }
 
+int testSerialize()
+{
+    arrayADT array = newArray();
+    arrayADT subjects = newArray();
 
+    char* subject1 =  "poo";
+    char* subject2 =  "pi";
+    char* subject3 =  "paw";
+
+    int age = 21;
+    char* name =  "santi";
+
+    arrayNodeADT node1 = newArrayNode(subject1, String);
+    arrayNodeADT node2 = newArrayNode(subject2, String);
+    arrayNodeADT node3 = newArrayNode(subject3, String);
+    addNodeToArray(subjects, node1);
+    addNodeToArray(subjects, node2);
+    addNodeToArray(subjects, node3);
+    arrayNodeADT nameNode = newArrayNode(name, String);
+    arrayNodeADT ageNode = newArrayNode(&age, Integer);
+    addNodeToArray(array, nameNode);
+    addNodeToArray(array, ageNode);
+    arrayNodeADT subjectsNode = newArrayNode(subjects, Array);
+    addNodeToArray(array, subjectsNode);
+    serialize(array, Array);
+    return 1;
+}
 
 
 //  beginnging of deserialization tests ---------------------------------------
@@ -1041,6 +1090,7 @@ int main(void)
     printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testSerialize() == 0)?"False" : "True" );
     //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
 
