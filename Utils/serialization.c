@@ -119,7 +119,7 @@ static void addNodeToEndOfArray(arrayADT array, arrayNodeADT node)
     if(array == NULL)
         return;
     array->first = appendNodeToArray(array->first, node);
-    if(node == NULL)
+    if(node != NULL)
         array->size++;
 }
 
@@ -475,11 +475,11 @@ arrayADT deserializeArray(char* string)
     {
         types[i] = *(string + HEADER_SIZE + i)-'0';
     }
-    arrayADT array = parseArray(string + HEADER_SIZE + numberOfAtributes, types);
+    arrayADT array = parseArray(string + HEADER_SIZE + numberOfAtributes, types, numberOfAtributes);
     return array;
 }
 
-arrayADT  parseArray(char* string, Type types[])
+arrayADT  parseArray(char* string, Type types[], int numberOfAtributes)
 {
     if(string == NULL)
         return NULL;
@@ -493,6 +493,11 @@ arrayADT  parseArray(char* string, Type types[])
     bufferADT buffer = newBuffer();
     void* value;
     void* deserializeValue;
+    if(numberOfAtributes == 0)
+    {
+        freeBuffer(buffer);
+        return array;
+    }
     do
     {
         char c = *(string + index);
@@ -525,6 +530,7 @@ arrayADT  parseArray(char* string, Type types[])
                     value = calloc(getBufferSize(buffer), sizeof(char));
                     getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
                     deserializeValue = getTypeSize(types[typeIndex], value);
+
                     deserializeType(deserializeValue, value, types[typeIndex]);
                     free(value);
                     arrayNodeADT node = newArrayNode(deserializeValue, types[typeIndex]);
@@ -673,7 +679,6 @@ char* valueOfString(char* string)
     int size = strlen(string)-2;// the -2 is to get rid of the "
     char* copyString = calloc(size+1, sizeof(char));
     memcpy(copyString, string+1, size ); // the +1 is to skipp "
-    printf("the string is %s\n", copyString);
     return copyString;
 }
 
@@ -1012,36 +1017,38 @@ int testSerializationDeserialization()
     printf("the first element is %s\n",  getValueInArray(array,0));
     char* str = serialize(array, Array);
     printf("the serialization thorws %s\n", str);
-    printf("this is what the des in=s recieving ..\n");
+    printf("this is what the deserialization is recieving ..\n");
     printf("%s\n",str+10);
     arrayADT deserializedArray = deserialize(str+10);
-    printf("the first element is %s\n", getValueInArray(deserializedArray,0));
-    str = serialize(deserializedArray, Array );
-    printf("the serialization thorws %s\n", str);
+
+    printf("the size is %d\n", getArraySize(deserializedArray) );
+    //printf("the first element is %s\n", getValueInArray(deserializedArray,0));
+    //str = serialize(deserializedArray, Array );
+    //printf("the serialization thorws %s\n", str);
     return 1;
 }
 
 /*
 int main(void)
 {
-    printf("going to run tests...\n");
-    printf(" the result was %s\n",(test_intToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(test_doubleToString() == 0)?"False" : "True");
-    printf(" the result was %s\n",(testBuffer() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testArrayToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testArrayOfArraytoString() == 0)?"False" : "True");
-    printf(" the result was %s\n",(testObjectToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testJsonToString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testSerializeString() == 0)?"False" : "True" );
-    printf("DONE! serialization tests\n");
-    printf("\n");
-    printf("\n");
-    printf("Going to test deserializatino...\n");
-    printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testDeserializeString() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
-    printf(" the result was %s\n",(testSerialize() == 0)?"False" : "True" );
+    // printf("going to run tests...\n");
+    // printf(" the result was %s\n",(test_intToString() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(test_doubleToString() == 0)?"False" : "True");
+    // printf(" the result was %s\n",(testBuffer() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testArrayToString() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testArrayOfArraytoString() == 0)?"False" : "True");
+    // printf(" the result was %s\n",(testObjectToString() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testJsonToString() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testSerializeString() == 0)?"False" : "True" );
+    // printf("DONE! serialization tests\n");
+    // printf("\n");
+    // printf("\n");
+    // printf("Going to test deserializatino...\n");
+    // printf(" the result was %s\n",(testvalueOfDouble() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testDeserializeString() == 0)?"False" : "True" );
+    // printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
+    //printf(" the result was %s\n",(testSerialize() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testSerializationDeserialization() == 0)?"False" : "True" );
     //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }

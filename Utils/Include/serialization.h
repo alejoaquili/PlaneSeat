@@ -96,7 +96,7 @@ void deserializeType(void* destination, char* string, Type type);
 static State getStateArray(char c, int weight);
 arrayADT deserializeArray(char* string);
 void deserializeArrayNodeAt(arrayADT array, int index, Type type);
-arrayADT  parseArray(char* string, Type types[]);
+arrayADT  parseArray(char* string, Type types[], int numberOfAtributes);
 int valueOfInt(char* string);
 double valueOfDouble(char* string);
 char* valueOfString(char* string);
