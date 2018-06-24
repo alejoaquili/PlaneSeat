@@ -87,8 +87,8 @@ static void acceptAddReservation(int connectFd)
     for(int i = 0; i < 4; i++)
         dataString[i] = readStringToDeserialize(connectFd);
 
-    addNewReservation(db, dataString[0], dataString[1], dataString[2], atoi(dataString[3]));
-    freeSpace(2, dataString[0], dataString[1], *dataString[2], dataString[3]);
+    addNewReservation(db, dataString[0], dataString[1], *dataString[2], atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
 static void acceptDeleteReservation(int connectFd)
@@ -98,8 +98,8 @@ static void acceptDeleteReservation(int connectFd)
     for(int i = 0; i < 4; i++)
         dataString[i] = readStringToDeserialize(connectFd);
 
-    deleteReservation(db, dataString[0], dataString[1], dataString[2], atoi(dataString[3]));
-    freeSpace(2, dataString[0], dataString[1], *dataString[2], dataString[3]);
+    deleteReservation(db, dataString[0], dataString[1], *dataString[2], atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
 static void acceptSendFlightDistribution(int connectFd)

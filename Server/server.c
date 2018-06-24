@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <semaphore.h>
 #include "socketlib.h"
+#include "planeSeatDBHandler.h"
 #include "errorslib.h"
 #include "server.h"
 

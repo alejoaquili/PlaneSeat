@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "planeSeatClientUI.h"
-#include "planeSeatDBHandler.h"
 #include "utils.h"
 #include "commands.h"
 
