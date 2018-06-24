@@ -599,7 +599,6 @@ arrayADT deserializeArray(char* string)
     return array;
 }
 
-// no funciona hay que cambiar de estados
 arrayADT  parseArray(char* string, Type types[])
 {
     if(string == NULL)
@@ -701,7 +700,7 @@ void deserializeType(void* destination, char* string, Type type)
             break;
         case String:
             resultString = valueOfString(string);
-            memcpy(destination, &resultString, strlen(string));
+            memcpy(destination, resultString, strlen(string));
             break;
         case Array:
             resultArray = deserializeArray(string);
@@ -797,6 +796,7 @@ char* valueOfString(char* string)
     int size = strlen(string)-2;// the -2 is to get rid of the "
     char* copyString = calloc(size+1, sizeof(char));
     memcpy(copyString, string+1, size ); // the +1 is to skipp "
+    printf("the string is %s\n", copyString);
     return copyString;
 }
 
@@ -871,7 +871,7 @@ char* serialize(void* obj, Type type)
     char * serializedString = calloc(size+HEADER_SIZE, sizeof(char));
     strcat(serializedString, sizeOfSerializationString);
     strcat(serializedString, serialization);
-    printf("%s\n", serializedString);
+    //printf("%s\n", serializedString);
     return serializedString;
 }
 
@@ -1059,7 +1059,7 @@ int testStringToArray()
     printf("the first thing is the size ...%d\n",getArraySize(array));
 
 
-    printf("secondly the content .... %s\n", *((char**)getValueInArray(array,0)));
+    printf("secondly the content .... %s\n", getValueInArray(array,0));
     return 1;
 }
 
@@ -1069,6 +1069,42 @@ int testStringToObject()
     char* objectString = "\"name\":\"santiago\"";
     objectADT object = deserializeObject(objectString);
     printf("the result was... %s\n", getObjectValue(object));
+    return 1;
+}
+
+
+int testSerializationDeserialization()
+{
+    arrayADT array = newArray();
+    arrayADT subjects = newArray();
+
+    char* subject1 =  "poo";
+    char* subject2 =  "pi";
+    char* subject3 =  "paw";
+    int age = 21;
+    char* name =  "santi";
+
+    arrayNodeADT node1 = newArrayNode(subject1, String);
+    arrayNodeADT node2 = newArrayNode(subject2, String);
+    arrayNodeADT node3 = newArrayNode(subject3, String);
+    addNodeToArray(subjects, node1);
+    addNodeToArray(subjects, node2);
+    addNodeToArray(subjects, node3);
+    arrayNodeADT nameNode = newArrayNode(name, String);
+    arrayNodeADT ageNode = newArrayNode(&age, Integer);
+    addNodeToArray(array, nameNode);
+    addNodeToArray(array, ageNode);
+    arrayNodeADT subjectsNode = newArrayNode(subjects, Array);
+    addNodeToArray(array, subjectsNode);
+    printf("the first element is %s\n",  getValueInArray(array,0));
+    char* str = serialize(array, Array);
+    printf("the serialization thorws %s\n", str);
+    printf("this is what the des in=s recieving ..\n");
+    printf("%s\n",str+10);
+    arrayADT deserializedArray = deserialize(str+10);
+    printf("the first element is %s\n", getValueInArray(deserializedArray,0));
+    str = serialize(deserializedArray, Array );
+    printf("the serialization thorws %s\n", str);
     return 1;
 }
 
@@ -1091,6 +1127,7 @@ int main(void)
     printf(" the result was %s\n",(testvalueOfInt() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testStringToArray() == 0)?"False" : "True" );
     printf(" the result was %s\n",(testSerialize() == 0)?"False" : "True" );
+    printf(" the result was %s\n",(testSerializationDeserialization() == 0)?"False" : "True" );
     //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
 
