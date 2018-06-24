@@ -1,17 +1,19 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-int help(int clientSocketFd);
 
-int addFlight(int clientSocketFd);
+int applyToGetFlights(int clientSocketFd);
 
-int deleteFlight(int clientSocketFd);
+int applyToAddFlight(int clientSocketFd);
 
-int check(int clientSocketFd);
+int applyToDeleteFlight(int clientSocketFd);
 
-int reserve(int clientSocketFd);
+int applyToReserve(int clientSocketFd);
 
-int cancel(int clientSocketFd);
+int applyToCancel(int clientSocketFd);
+
+int applyToPrintFlightDistribution(int clientSocketFd);
 
 
 #endif
+

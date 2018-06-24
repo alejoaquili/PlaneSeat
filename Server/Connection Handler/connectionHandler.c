@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "errorslib.h"
+#include "socketlib.h"
 #include "connectionHandler.h"
 #include "planeSeatDBHandler.h"
 #include "planeSeatSerialized.h"
@@ -22,8 +23,6 @@ static void addReservation(int socketFd);
 static void deleteReservation(int socketFd);
 
 static void sendFlightDistribution(int socketFd);
-
-static char * readStringToDeserialize(int socketFd);
 
 
 typedef void (* planeSeatOperations_t)(int);
@@ -91,49 +90,38 @@ static void deleteFlight(int socketFd)
 
 static void addReservation(int socketFd)
 {
-    char * dataString[2];
-    int dataInt[2];
-    for(int i = 0; i < 3; i++)
+    char * dataString[4];
+
+    for(int i = 0; i < 4; i++)
     {
         char * string = readStringToDeserialize(socketFd);
         dataString[i] = deserializeToString(string);
         free(string);
     }
-    for(int i = 0; i < 3; i++)
-    {
-        char * string = readStringToDeserialize(socketFd);
-        dataInt[i] = deserializeToString(string);
-        free(string);
-    }
 
-    addNewReservation(db, dataString[0], dataString[1], dataInt[0], dataInt[1]);
-    freeSpace(2, dataString[0], dataString[1]);
+    addNewReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
 static void deleteReservation(int socketFd)
 {
-    char * dataString[2];
-    int dataInt[2];
-    for(int i = 0; i < 3; i++)
+    char * dataString[4];
+
+    for(int i = 0; i < 4; i++)
     {
         char * string = readStringToDeserialize(socketFd);
         dataString[i] = deserializeToString(string);
         free(string);
     }
-    for(int i = 0; i < 3; i++)
-    {
-        char * string = readStringToDeserialize(socketFd);
-        dataInt[i] = deserializeToString(string);
-        free(string);
-    }
 
-    deleteReservation(db, dataString[0], dataString[1], dataInt[0], dataInt[1]);
-    freeSpace(2, dataString[0], dataString[1]);
+    deleteReservation(db, dataString[0], dataString[1], atoi(dataString[2]), atoi(dataString[3]));
+    freeSpace(2, dataString[0], dataString[1], dataString[2], dataString[3]);
 }
 
 static void getFlightDistribution(int socketFd)
 {
     char * string = readStringToDeserialize(socketFd);
+    char * flightNumber = deserialize(string, String);
     char * flightNumber = deserializeToString(string);
     int qty;
     flightSeats_t * fsd = getFlightSeatsDistribution(db, flightNumber, &qty);
@@ -159,16 +147,6 @@ int deserializeToInt(char * string)
     int resp = *((int *) getValueInArray(array, 0));
     freeArray(array);
     return resp;
-}
-
-static char * readStringToDeserialize(int socketFd)
-{
-    char buffer[10];
-    read(socketFd, buffer, 10);
-    int nbytes = valueOfInt(buffer);
-    char * buffer2 = calloc(1, nbytes);
-    read(socketFd, buffer2, nbytes);
-    return buffer2;
 }
 
 

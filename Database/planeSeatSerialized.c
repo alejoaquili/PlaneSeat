@@ -16,7 +16,7 @@ char * serializeFlights(flight_t * flights, int qty)
 
         addNodeToArray(arrayFlights, newArrayNode(flight, Array));
     }
-    char * flightsText = serialize(arrayFlights);
+    char * flightsText = serialize(arrayFlights, Array);
     freeArray(arrayFlights);
     return flightsText;
 }
@@ -51,7 +51,7 @@ char * serializeFlightSeats(flightSeats_t * fsd, int qty)
 
         addNodeToArray(arrayFlightSeats, newArrayNode(seat, Array));
     }
-    char * fsdText = serialize(arrayFlightSeats);
+    char * fsdText = serialize(arrayFlightSeats, Array);
     freeArray(arrayFlightSeats);
     return fsdText;
 }

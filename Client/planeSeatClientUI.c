@@ -5,16 +5,19 @@
 #include "utils.h"
 #include "commands.h"
 
+
 #define COMMAND_QTY 6
 
 static command_t commands[COMMAND_QTY] = {
     {"help", " ", help}, 
-    {"add flight", "Add a new flight to the system.", addFlight},
-    {"delete flight", "Delete a flight from the system.", deleteFlight},
-    {"check flight status", "Check reserved seats for a certain flight.", check},
-    {"make reservation", "Make a seat reservation for a flight.", reserve},
-    {"cancel reservation", "Cancel a seat reservation for a flight.", cancel},
+    {"get flights", "Shows the list of flight on the system.", applyToGetFlights},
+    {"add flight", "Add a new flight to the system.", applyToAddFlight},
+    {"delete flight", "Delete a flight from the system.", applyToDeleteFlight},
+    {"make reservation", "Make a seat reservation for a flight.", applyToReserve},
+    {"cancel reservation", "Cancel a seat reservation for a flight.", applyToCancel},
+    {"print flight", "Shows the seats of a flight.", applyToPrintFlightDistribution}
 };
+
 
 static int run(const char * name, command_t * commands, int clientSocketFd);
 
@@ -22,6 +25,7 @@ static void validate(int input);
 
 static int extractCommand(char * command, const char * buffer);
 
+static int help(int clientSocketFd);
 
 
 int planeSeatClientUI(int clientSocketFd)
@@ -29,7 +33,7 @@ int planeSeatClientUI(int clientSocketFd)
     printf("\n\nWelcome to the Flight Reservation Service.\n\tPlease run help to see the available commands.\n");
     char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
     int  resp = 0;
-    while(1)
+	do
     {
         printf("\n$ >> ");
         scanf(buffer, BUFFER_LENGTH);
@@ -42,20 +46,21 @@ int planeSeatClientUI(int clientSocketFd)
         }
         CLEAN_BUFFER
     }
+    while(buffer[0] != '\0' && !IS_QUIT(buffer));
+	return 0;
 }
 
 static int run(const char * name, command_t * commands, int clientSocketFd)
 {
-    int ret = INVALID_COMMAND;
     for (int i = 0; i < COMMAND_QTY; i++) 
     {
         if (strcmp(name, commands[i].name) == 0) 
         {
-            ret = VALID_COMMAND;
             commands[i].function(clientSocketFd);
+			return VALID_COMMAND;
         }
     }
-    return ret;
+    return INVALID_COMMAND;
 }
 
 static void validate(int input) 
@@ -73,77 +78,13 @@ static int extractCommand(char * command, const char * buffer)
     return i;
 }
 
-  
-void printTest(void)
+static int help(int clientSocketFd)
 {
-	flightSeat_t seats[TOTAL_SEATS];
-	int i, j, k=0;
-
-	for (j = 0; j < COL_NUMBER; j++)
-	{	
-		for (i = 0; i < ROW_NUMBER; i++)
-		{
-			seats[k].colLetter = (j + 97);
-			seats[k].rowNumber = i;
-			if (k%2 == 0)
-				seats[k].occupied = 1;
-			else
-				seats[k].occupied = 0;
-			k++;
-		}
-	}
-	printPlane(seats);
-	return 0;
-}
-
-void printPlane(flightSeat_t * seats)
-{
-	int plane[ROW_NUMBER][COL_NUMBER];
-	int  m, i, j, k;
-	char columns[COL_NUMBER] = {'A','B','C','D','E','F','G','H'};
-
-	for (m = 0; m < TOTAL_SEATS; m++)
-	{
-		plane[seats[m].rowNumber][(seats[m].colLetter) - 97] = seats[m].occupied;
-	}
-
-	putchar('\n');
-	printf("      A ");
-
-	for (i = 1; i < COL_NUMBER; i++)
-		printf ("%3c ", columns[i]);
-
-	putchar('\n');
-	printf("    +---");
-
-	for (i = 0; i < (COL_NUMBER - 1); i++)
-		printf("+---");
-
-	printf("+\n");
-
-	for (i = 0; i < ROW_NUMBER; i++)
-	{
-		printf("%3d ", i+1);
-
-		for (j = 0; j < COL_NUMBER; j++)
-		{
-			printf("|");
-
-			if (plane[i][j] == 0)
-				printf("   ");
-		
-			else 
-				printf(" * ");
-		}
-
-		printf("|\n");
-		printf("    +---");
-			
-		for (k = 0; k < (COL_NUMBER - 1); k++) 
-			printf("+---");
-
-		printf("+\n");
-	}
-	putchar('\n');
+    printf("\n\nWelcome to the Flight Reservation service\n");
+    printf("These are the available commands:\n");
+    for (int i=1; i < COMMAND_QTY; i++)
+        printf("\n%s:\t%s\n", commands[i].name, commands[i].description);
+    
+    return 0;
 }
 

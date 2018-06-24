@@ -37,7 +37,6 @@ int acceptClientSocket(int socketFd)
 	return acceptClientSocketFd;
 }
 
-
 int connectClientToSocket(int clientSocketFd, int port, char * ip)
 {
 	struct sockaddr_in inAddress;
@@ -49,3 +48,14 @@ int connectClientToSocket(int clientSocketFd, int port, char * ip)
 	checkFail(result, "connect() Failed");
 	return result;
 }
+
+char * readStringToDeserialize(int socketFd)
+{
+    char buffer[10];
+    read(socketFd, buffer, 10);
+    int nbytes = valueOfInt(buffer);
+    char * buffer2 = calloc(1, nbytes);
+    read(socketFd, buffer2, nbytes);
+    return buffer2;
+}
+

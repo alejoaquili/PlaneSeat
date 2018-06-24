@@ -2,310 +2,199 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
+#include "socketlib.h"
+#include "planeSeatSerialized.h"
 #include "planeSeatClientUI.h"
 
-#define QUIT -1
 
-static char * askForFlightNumber(char * id);
-
-static int askForSeat(char * letter, int * number);
-
-static int checkSeat(char letter, int number);
-
-static int checkValidNumber(char * number);
-
-static int existsReservation(char * id, int fligthNumber, char letter, int number);
-
-static int seatFree(int flightNumber, char letter, int number);
-
-static void reserveSeat(id, flightNumber, buffer);
-
-static int checkNotRepeated(char * number);
-
-static void addFlightToDB(char * number);
-
-static void deleteFlightFromDB(char * number);
-
-static flightSeat_t * findFlight(char * flight);
+static void printPlane(flightSeat_t * seats);
 
 
-
-int help(int clientSocketFd)
+int applyToGetFlights(int clientSocketFd)
 {
-    printf("\n\nWelcome to the Flight Reservation service\n");
-    printf("These are the available commands:\n");
-    for (int i=1; i < COMMAND_QTY; i++)
-        printf("\n%s:\t%s\n", commands[i].name, commands[i].description);
-    
-    return 0;
-}
-
-int addFlight(int clientSocketFd)
-{	
-	char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
-    int added = 0;
-
-    do
-    {
-        printf("Please enter a flight number for the new flight. Type quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
-        { 
-        	if (checkValidNumber(buffer))
-        	{
-        		if (checkNotRepeated(buffer))
-        		{
-        			addFlightToDB(buffer);
-        			added = 1;
-        		}
-
-        		else
-        			printf("Flight number already exists\n");
-        	}
-        	else
-        		printf("Invalid flight number. Please only enter positive integers\n");
-            
-        }
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer) && !added);
-    return 0;
-}
-
-int deleteFlight(int clientSocketFd)
-{	
-	char buffer[BUFFER_LENGTH], command[BUFFER_LENGTH];
-    int deleted = 0;
-
-    do
-    {
-        printf("Please enter a flight number to delete. Type quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
-        { 
-        	if (findFlight(buffer) != NULL)
-        	{
-        		deleteFlightFromDB(buffer);
-        		deleted = 1;
-        	}
-        	else
-        		printf("Invalid flight number.\n");
-            
-        }
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer) && !deleted);
-    return 0;
-}
-
-int check(int clientSocketFd)
-{
-	flightSeat_t * seats
-	char flight[BUFFER_LENGTH];
-    //hay q pedir el flight number aca
-	if (seats = findFlight(flight) != NULL)
-	{
-		printPlane(seats);
-		return 0;
-	}
-	printf("Wrong flight number.\n");
-	return 1;
-}
-
-int reserve(int clientSocketFd)
-{
-	char buffer[BUFFER_LENGTH], letter;
-	char * flightNumber;
-    int reserved = 0, number;
-
-    do
-    {
-        printf("Please enter a client ID. Insert only numbers. Type quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
-        { 
-        	if (checkValidNumber(buffer))
-        	{
-        		flightNumber = askForFlightNumber(buffer);
-        		if (flightNumber == NULL)
-        			return 0;
-
-        		printPlane(flightNumber);
-
-        		if (askForSeat(&letter, &number) == QUIT)	
-        			return 0;
-        		
-        		if (seatFree(fligthNumber, letter, number))
-        		{
-	        		reserveSeat(id, flightNumber, letter, number);
-	        		printPlane(fligthNumber);
-	        		reserved = 1;
-	        	}
-	        	else 
-	        		printf("Seat taken\n");
-        	}
-        	else
-        		printf("Invalid ID. Please only enter positive integers\n");
-            
-        }
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer) && !reserved);
-    return 0;
-}
-
-int cancel(int clientSocketFd)
-{
-	char buffer[BUFFER_LENGTH], letter;
-	char * flightNumber;
-    int canceled = 0, number;
-
-    do
-    {
-        printf("Please enter a client ID. Type quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
-        { 
-        	flightNumber = askForFlightNumber(buffer);
-        	if (flightNumber == NULL)
-        		return 0;
-
-        	printPlane(fligthNumber);
-
-        	if (ạskForSeat(&letter, &number) == QUIT)
-        		return 0;
-
-        	if (existsReservation(buffer, fligthNumber, letter, number))
-        	{
-        		cancelSeat(id, flightNumber)
-        		printPlane(buffer);
-        		canceled = 1;
-        	}
-        	else
-        		printf("There is no such reservation\n");
-            
-        }
-        
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer) && !canceled);
-    return 0;
-}
-
-static char * askForFlightNumber(char * id)
-{
-	char buffer[BUFFER_LENGTH];
-    int reserved = 0;
-
-    do
-    {
-        printf("Please enter an existing flight number. Type quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-
-        if (buffer[0] != '\0' && !IS_QUIT(buffer)) 
-        { 
-        	if (findFlight(buffer) != NULL)
-        	{
-        		return buffer;
-        	}
-        	else
-        		printf("Invalid flight number.\n");
-            
-        }
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer));
-    
-    if (IS_QUIT(buffer))
-    	return 	NULL;
-}
-
-static int askForSeat(char * letter, int * number)
-{
-	char buffer[BUFFER_LENGTH];
-	int valid = 0, cant;
+	int qty;
+	flight_t * flights;
 	
-	do
-    {
-        printf("Please enter an available flight seat.\nFormat: [A-H][01-30]\nType quit to cancel\n");
-        scanf(buffer, BUFFER_LENGTH);
-        cant = sscanf(buffer, "%c %d", letter, number);
+	send(clientSocketFd, itoa(SEND_FLIGHTS), 1);
 
-        if (buffer[0] != '\0' && !IS_QUIT(buffer) && cant == 2) 
-        { 
-        	if (checkSeat(*letter, *number))
-        	{
-        		valid = 1;
-        	}
-        	else
-        		printf("Invalid seat number.\n");
-            
-        }
-        CLEAN_BUFFER
-    }
-    while (!IS_QUIT(buffer) && !valid);
-    
-    if (IS_QUIT(buffer))
-    	return 	QUIT;
+    char * string = readStringToDeserialize(socketFd);
+    flights = deserializeToFlights(string, &qty);
+
+	printf("This is the list of flights: \n");
+	for(int i = 0; i < qty; i++)
+		printf("\tFlight Number: %s, Origin: %s, Destination: %s\n", flights[i].flightNumber, flights[i].origin, flights[i].destination);
+
+    freeSpace(2, string, flights);
+}
+
+int applyToAddFlight(int clientSocketFd)
+{	
+	char * request[3] = {"flight number", "origin", "destination"};
+	char buffer[BUFFER_LENGTH];
+	char * flightSerialized[3];
+
+	for(int i = 0; i < 3; i++)
+	{
+		printf("Please enter a %s for the new flight. Type quit to cancel\n", request[i]);
+		scanf(buffer, BUFFER_LENGTH);
+		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
+			return 0;
+		flightSerialized[i] = serializeString(buffer);
+	}
+
+	send(clientSocketFd, itoa(ADD_FLIGHT), 1);
+	for(int i = 0; i < 3; i++)
+	{
+		send(clientSocketFd, flightSerialized[i], strlen(flightSerialized[i]));
+		free(flightSerialized[i]);
+	}
     return 0;
 }
 
-static int checkSeat(char letter, int number)
-{
-	if (toUpper(letter) < 'A' || toUpper(letter) > 'H')
+int applyToDeleteFlight(int clientSocketFd)
+{	
+	char buffer[BUFFER_LENGTH];
+	char * flightSerialized;
+        
+	printf("Please enter a flight number to delete. Type quit to cancel\n");
+	scanf(buffer, BUFFER_LENGTH);
+
+	if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 		return 0;
 
-	if (number < 1 || number > 30)
+	flightSerialized = serializeString(buffer);
+
+	send(clientSocketFd, itoa(DELETE_FLIGHT), 1);
+	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
+	free(flightSerialized);
+    return 0;
+}
+
+int applyToReserve(int clientSocketFd)
+{
+	char * request[4] = {"flight number", "user id", "column letter", "row number"};
+	char buffer[BUFFER_LENGTH];
+	char * reservationSerialized[4];
+	
+	for(int i = 0; i < 4; i++)
+	{
+		printf("Please enter a %s for the new reservation. Type quit to cancel\n", request[i]);
+		scanf(buffer, BUFFER_LENGTH);
+		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
+			return 0;
+		reservationSerialized[i] = serializeString(buffer);
+	}
+
+	send(clientSocketFd, itoa(ADD_RESERVATION), 1);
+	for(int i = 0; i < 4; i++)
+	{
+		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
+		free(reservationSerialized[i]);
+	}
+    return 0;
+}
+
+int applyToCancel(int clientSocketFd)
+{
+	char * request[4] = {"flight number", "user id", "column letter", "row number"};
+	char buffer[BUFFER_LENGTH];
+	char * reservationSerialized[4];
+	
+	for(int i = 0; i < 4; i++)
+	{
+		printf("Please enter a %s for the calcelation. Type quit to cancel\n", request[i]);
+		scanf(buffer, BUFFER_LENGTH);
+		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
+			return 0;
+		reservationSerialized[i] = serializeString(buffer);
+	}
+
+	send(clientSocketFd, itoa(DELETE_RESERVATION), 1);
+	for(int i = 0; i < 4; i++)
+	{
+		send(clientSocketFd, reservationSerialized[i], strlen(reservationSerialized[i]));
+		free(reservationSerialized[i]);
+	}
+    return 0;
+}
+
+int applyToPrintFlightDistribution(int clientSocketFd)
+{
+	int qty;
+	flightSeat_t * seats;
+	char buffer[BUFFER_LENGTH];
+	char * flightSerialized;
+        
+	printf("Please enter a flight number to print. Type quit to cancel\n");
+	scanf(buffer, BUFFER_LENGTH);
+
+	if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 		return 0;
 
-	return 1;
+	flightSerialized = serializeString(buffer);
+	send(clientSocketFd, itoa(SEND_FSD), 1);
+	send(clientSocketFd, flightSerialized, strlen(flightSerialized));
+	free(flightSerialized);
+	
+    char * string = readStringToDeserialize(socketFd);
+    seats = deserializeToFlightSeats(string, &qty);
+
+	printPlane(seats);
+
+    freeFlightSeatsDistribution(fsd, qty);
+    free(string);
 }
 
-static int checkValidNumber(char * number)
+
+static void printPlane(flightSeat_t * seats)
 {
-	int num = atoi(number);
-    if (!isdigit(num) || num < 0)
-		return 0;
-	return 1;
+	int plane[ROW_NUMBER][COL_NUMBER];
+	int  m, i, j, k;
+	char columns[COL_NUMBER] = {'A','B','C','D','E','F','G','H'};
+
+	for (m = 0; m < TOTAL_SEATS; m++)
+	{
+		plane[seats[m].rowNumber][(seats[m].colLetter) - 97] = seats[m].occupied;
+	}
+
+	putchar('\n');
+	printf("      A ");
+
+	for (i = 1; i < COL_NUMBER; i++)
+		printf ("%3c ", columns[i]);
+
+	putchar('\n');
+	printf("    +---");
+
+	for (i = 0; i < (COL_NUMBER - 1); i++)
+		printf("+---");
+
+	printf("+\n");
+
+	for (i = 0; i < ROW_NUMBER; i++)
+	{
+		printf("%3d ", i+1);
+
+		for (j = 0; j < COL_NUMBER; j++)
+		{
+			printf("|");
+
+			if (plane[i][j] == 0)
+				printf("   ");
+		
+			else 
+				printf(" * ");
+		}
+
+		printf("|\n");
+		printf("    +---");
+			
+		for (k = 0; k < (COL_NUMBER - 1); k++) 
+			printf("+---");
+
+		printf("+\n");
+	}
+	putchar('\n');
 }
 
-static int existsReservation(char * id, int fligthNumber, char letter, int number)
-{
-	//se fija si existe la reservation. devuelve 1 si existe y 0 si no
-}
-
-static int seatFree(int flightNumber, char letter, int number)
-{
-	//devuelve 1 si el asiento esta free, 0 si no
-}
-
-static void reserveSeat(id, flightNumber, buffer)
-{
-	//reserva el asiento
-}
-
-
-static int checkNotRepeated(char * number)
-{
-	//checkea si ya esta en la db
-}
-
-static void addFlightToDB(char * number)
-{
-	//lo agrega
-}
-
-static void deleteFlightFromDB(char * number)
-{
-	//lo elimina
-}
-
-static flightSeat_t * findFlight(char * flight)
-{
-	//se fija si existe el flight. si existe devuelve el vector de seats, sino null
-	return NULL;
-}
