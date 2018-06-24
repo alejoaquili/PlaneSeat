@@ -44,7 +44,7 @@ int applyToAddFlight(int clientSocketFd)
 	for(int i = 0; i < 3; i++)
 	{
 		printf("Please enter a %s for the new flight. Type quit to cancel\n", request[i]);
-		scanf(buffer, BUFFER_LENGTH);
+		scanf("%s", buffer);
 		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 			return 0;
 		flightSerialized[i] = serializeString(buffer);
@@ -66,7 +66,7 @@ int applyToDeleteFlight(int clientSocketFd)
 	sprintf(operation, "%d", DELETE_FLIGHT);
 
 	printf("Please enter a flight number to delete. Type quit to cancel\n");
-	scanf(buffer, BUFFER_LENGTH);
+	scanf("%s", buffer);
 
 	if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 		return 0;
@@ -89,7 +89,7 @@ int applyToReserve(int clientSocketFd)
 	for(int i = 0; i < 4; i++)
 	{
 		printf("Please enter a %s for the new reservation. Type quit to cancel\n", request[i]);
-		scanf(buffer, BUFFER_LENGTH);
+		scanf("%s", buffer);
 		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 			return 0;
 		reservationSerialized[i] = serializeString(buffer);
@@ -114,7 +114,7 @@ int applyToCancel(int clientSocketFd)
 	for(int i = 0; i < 4; i++)
 	{
 		printf("Please enter a %s for the calcelation. Type quit to cancel\n", request[i]);
-		scanf(buffer, BUFFER_LENGTH);
+		scanf("%s", buffer);
 		if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 			return 0;
 		reservationSerialized[i] = serializeString(buffer);
@@ -138,7 +138,7 @@ int applyToPrintFlightDistribution(int clientSocketFd)
 	sprintf(operation, "%d", SEND_FSD);
         
 	printf("Please enter a flight number to print. Type quit to cancel\n");
-	scanf(buffer, BUFFER_LENGTH);
+	scanf("%s", buffer);
 
 	if(buffer[0] == '\0' || IS_QUIT(buffer)) 
 		return 0;
