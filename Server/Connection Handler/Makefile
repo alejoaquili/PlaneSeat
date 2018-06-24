@@ -10,7 +10,7 @@ comp:$(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES)
 
 link:$(OBJECTS)
-	$(LINKER) $(LFLAGS) $(OBJECTS) -I./../../Utils/*.o -I./../../Database/*.o -o $(TARGET).out
+	$(LINKER) $(LFLAGS) $(OBJECTS) ./../../Database/*.o ./../../Utils/*.o -o $(TARGET).out
 
 %.o : %.c
 	$(CC) $(CFLAGS) $< -o $@

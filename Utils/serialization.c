@@ -986,7 +986,7 @@ int testSerializationDeserialization()
     return 1;
 }
 
-
+/*
 int main(void)
 {
     printf("going to run tests...\n");
@@ -1009,5 +1009,5 @@ int main(void)
     //printf(" the result was %s\n",(testStringToObject() == 0)?"False" : "True" );
 }
 
-
+*/
 // funcion serialize(Void*);

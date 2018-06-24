@@ -6,17 +6,6 @@
 #include "utils.h"
 #include "commands.h"
 
-#define BUFFER_LENGTH 256
-#define COMMAND_QTY 7
-#define VALID_COMMAND 0
-#define INVALID_COMMAND -1
-
-typedef struct command_t{
-    char * name;
-    char* description;
-    int (*function)(int clientSocketFd);
-} command_t;
-
 static int run(const char * name, command_t * commands, int clientSocketFd);
 
 static void validate(int input);

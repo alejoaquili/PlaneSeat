@@ -5,4 +5,4 @@ CFLAGS   = -g -c -Wall -pedantic -std=c99 -I./include -I./../../Utils/include -I
 
 LINKER 	 = gcc
 # Linking Flags:
-LFLAGS 	 = -g -Wall -pedantic -std=c99
+LFLAGS 	 = -g -Wall -pedantic -std=c99 -lsqlite3
