@@ -43,7 +43,7 @@ char * serializeFlightSeats(flightSeat_t * fsd, int qty)
     for(int i = 0; i < qty; i++)
     {
         arrayADT seat = newArray();
-        addNodeToArray(seat, newArrayNode(&(fsd[i].flightNumber), String));
+        addNodeToArray(seat, newArrayNode(fsd[i].flightNumber, String));
         addNodeToArray(seat, newArrayNode(&(fsd[i].colLetter), Integer));
         addNodeToArray(seat, newArrayNode(&(fsd[i].rowNumber), Integer));
         addNodeToArray(seat, newArrayNode(&(fsd[i].occupied), Integer));

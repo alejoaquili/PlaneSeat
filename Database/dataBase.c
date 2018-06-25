@@ -60,7 +60,8 @@ dataBaseADT openDataBase(char * dBName)
     dataBase->errorMessage = NULL;
     dataBase->statement = NULL;
     dataBase->returnCode = sqlite3_open(dBName, &dataBase->db);
-    
+    sqlite3_db_config(dataBase->db, SQLITE_DBCONFIG_ENABLE_FKEY, 1, NULL);
+
     if(dataBase->returnCode) 
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(dataBase->db));

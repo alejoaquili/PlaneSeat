@@ -148,11 +148,14 @@ int applyToPrintFlightDistribution(int clientSocketFd)
 	write(clientSocketFd, operation, 2);
 	write(clientSocketFd, flightSerialized, strlen(flightSerialized));
 	free(flightSerialized);
-	
+
     char * string = readStringToDeserialize(clientSocketFd);
     seats = deserializeToFlightSeats(string, &qty);
 
-	printPlane(seats);
+	if(qty > 0)
+		printPlane(seats);
+	else
+		printf("Inexistent flight\n");
 
     freeFlightSeatsDistribution(seats, qty);
     free(string);
