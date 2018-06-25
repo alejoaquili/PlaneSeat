@@ -168,7 +168,7 @@ static void printPlane(flightSeat_t * seats)
 
 	for (m = 0; m < TOTAL_SEATS; m++)
 	{
-		plane[seats[m].rowNumber][(seats[m].colLetter) - 97] = seats[m].occupied;
+		plane[seats[m].rowNumber - 1][(seats[m].colLetter) - 97] = seats[m].occupied;
 	}
 
 	putchar('\n');
