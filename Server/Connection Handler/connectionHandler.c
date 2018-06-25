@@ -35,12 +35,12 @@ int main(int argc , char *argv[])
     checkAreEquals(argc, 2, "Invalid arguments to Connection Handler");
     db = openDataBase(DB_NAME);  
 
-    int operation, connectFd = atoi(argv[0]);
+    int connectFd = atoi(argv[0]);
     char buffer[2];
     
     while((read(connectFd, buffer, 2) > 0)) //deberia ser blockeante 
     {
-        operation = atoi(buffer);
+        int operation = atoi(buffer);
         planeSeatOperations[operation](connectFd);
     }
     return 0;

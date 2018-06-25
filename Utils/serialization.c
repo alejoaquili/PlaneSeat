@@ -294,8 +294,7 @@ bufferADT newBuffer()
 static int addSpaceToBuffer(bufferADT buffer, int size)
 {
     void * newMemmory = calloc(size + buffer->size, sizeof(char));
-    if(memcpy(newMemmory, buffer->buffer, buffer->size) == NULL)
-        return -1;
+    memcpy(newMemmory, buffer->buffer, buffer->size);
     free(buffer->buffer);
     buffer->buffer = newMemmory;
     buffer->size += size;
@@ -605,7 +604,6 @@ void deserializeType(void* destination, char* string, Type type)
             break;
         case Undefined:
             printf("not implemented!\n");
-            memcmp(destination, NULL, sizeof(int));
             break;
     }
 }
@@ -938,7 +936,9 @@ int testBuffer()
     char* str = malloc(size * sizeof(char));
     getLastFromBuffer(buffer, str, size);
     freeBuffer(buffer);
-    return strcmp(str, testString) == 0;
+    int resp = strcmp(str, testString) == 0;
+    free(str);
+    return resp;
 }
 
 int testSerialize()

@@ -33,7 +33,7 @@ int planeSeatClientUI(int clientSocketFd)
 	do
     {
         printf("\n$ >> ");
-        scanf("%s",buffer);
+        scanf("%256s",buffer);
 
         if (buffer[0] != '\0') 
         { 

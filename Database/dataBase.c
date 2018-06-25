@@ -74,7 +74,6 @@ int deleteDataBase(dataBaseADT dataBase, boolean waitStatements)
 {
     if(dataBase == NULL)
         return -1;
-    sqlite3_stmt * preparedStatement;
     int result = sqlite3_close(dataBase->db);
     if(result == SQLITE_BUSY)
     {
@@ -82,7 +81,7 @@ int deleteDataBase(dataBaseADT dataBase, boolean waitStatements)
             return result;
         while(result == SQLITE_BUSY)
         {
-            preparedStatement = sqlite3_next_stmt(dataBase->db, NULL);
+            sqlite3_stmt * preparedStatement = sqlite3_next_stmt(dataBase->db, NULL);
             if(preparedStatement)
                 sqlite3_finalize(preparedStatement);
             result = sqlite3_close(dataBase->db); 

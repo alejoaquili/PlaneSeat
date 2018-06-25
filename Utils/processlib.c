@@ -8,7 +8,7 @@
 
 pid_t * childFactory(int qty, char * childName)
 {
-	pid_t * children = malloc(qty * sizeof(pid_t*));
+	pid_t * children = malloc(qty * sizeof(pid_t));
 
 	for (int i = 0; i < qty; i++)
 	{ 
@@ -27,7 +27,7 @@ pid_t * childFactory(int qty, char * childName)
 
 pid_t * childFactoryWithArgs(int qty, char * childPath, char ** args)
 {
-	pid_t * children = malloc(qty * sizeof(pid_t*));
+	pid_t * children = malloc(qty * sizeof(pid_t));
 
 	for (int i = 0; i < qty; i++)
 	{ 
