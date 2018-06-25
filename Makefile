@@ -1,4 +1,4 @@
-all: clean comp run
+all: clean comp
 comp: 
 	cd Database; make all
 	cd Utils; make all
@@ -13,9 +13,6 @@ clean:
 	cd Test; make clean
 	rm -rf planeSeat
 
-run: 
-	chmod 777 run.sh	
-	./run.sh
 test:
 	cd Database; make all
 	cd Utils; make all
