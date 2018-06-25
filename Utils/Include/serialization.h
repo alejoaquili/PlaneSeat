@@ -100,7 +100,8 @@ arrayADT  parseArray(char* string, Type types[], int numberOfAtributes);
 int valueOfInt(char* string);
 double valueOfDouble(char* string);
 char* valueOfString(char* string);
-void* getTypeSize(Type type, char* string);// puede que sea static
+int getTypeSize(Type type, char* string);// puede que sea static
+void* getTypeSpace(Type type, char* string);// puede que sea static
 static objectADT parseObject(char* string );
 //----------------End of array contract----------------------------------------
 

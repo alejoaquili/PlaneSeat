@@ -89,7 +89,11 @@ static void* searchForValue(arrayNodeADT node, int index)
     if(node == NULL)   
         return NULL;
     if(index == 0)
-        return node->value;
+    {
+        void* value = getTypeSpace(node->type, node->value);
+        memcpy(value, node->value,getTypeSize(node->type, node->value));
+        return value;
+    }
     return searchForValue(node->next, index-1);
 }
 
@@ -514,7 +518,7 @@ arrayADT  parseArray(char* string, Type types[], int numberOfAtributes)
             case createNode:
                 value = calloc(getBufferSize(buffer), sizeof(char));
                 getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
-                deserializeValue = getTypeSize(types[typeIndex], value);
+                deserializeValue = getTypeSpace(types[typeIndex], value);
                 deserializeType(deserializeValue, value, types[typeIndex]);
                 //printf("the value to get is %s\n", *((char**)deserializeValue));
                 free(value);
@@ -529,7 +533,7 @@ arrayADT  parseArray(char* string, Type types[], int numberOfAtributes)
                 {
                     value = calloc(getBufferSize(buffer), sizeof(char));
                     getLastFromBuffer(buffer, value, getBufferSize(buffer));// this clears the buffer
-                    deserializeValue = getTypeSize(types[typeIndex], value);
+                    deserializeValue = getTypeSpace(types[typeIndex], value);
 
                     deserializeType(deserializeValue, value, types[typeIndex]);
                     free(value);
@@ -617,7 +621,7 @@ void deserializeArrayNodeAt(arrayADT array, int index, Type type)
 }
 
 
-void* getTypeSize(Type type, char* string)
+void* getTypeSpace(Type type, char* string)
 {
 
     int size = 0;
@@ -652,6 +656,40 @@ void* getTypeSize(Type type, char* string)
     return calloc(count, size);
 }
 
+int getTypeSize(Type type, char* string)
+{
+
+    int size = 0;
+    int count  = 1;
+    switch(type)
+    {
+        case Integer:
+            size = sizeof(int);
+            break;
+        case Double:
+            size =sizeof(double);
+            break;
+        case String:
+            size = sizeof(char);
+            count = strlen(string);
+            break;
+        case Array:
+            size = sizeof(arrayCDT);
+            break;
+        case Object:
+            printf("not implemented yet\n");
+            size = sizeof(objectCDT);
+            break;
+        case Json:
+            printf("not implemented yet\n");
+            size = sizeof(jsonCDT);
+            break;
+        case Undefined:
+            printf("not implemented!\n");
+            break;
+    }
+    return count * size;
+}
 
 // ------------------------ Deserialization of primitives ---------------------
 
