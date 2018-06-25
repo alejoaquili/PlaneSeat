@@ -51,7 +51,7 @@ static int deleteFromReservationFmtSize = 45;
 
 static int createTables(dataBaseADT db);
 static int addNewFlightSeats(dataBaseADT db, char * flightNumber);
-static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char *  userId);
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char *  userId, int mode);
 
 
 dataBaseADT createPlaneSeatDataBaseHandler(void)
@@ -77,7 +77,7 @@ int addNewFlight(dataBaseADT db, char * flightNumber, char * origin, char * dest
 
 int addNewReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber)
 {
-    if(!checkFlightReservation(db, flightNumber, colLetter, rowNumber, userId))
+    if(!checkFlightReservation(db, flightNumber, colLetter, rowNumber, userId, 1))
         return -1;
     char newQuery[MAX_QUERY_LENGTH];
     memcpy(newQuery, updateFlightSeatsFmt, updateFlightSeatsFmtSize);
@@ -104,7 +104,7 @@ int deleteFlight(dataBaseADT db, char * flightNumber)
 
 int deleteReservation(dataBaseADT db, char * flightNumber, char * userId, char colLetter, int rowNumber)
 {
-    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber, userId))
+    if(!checkFlightReservation(db, flightNumber, colLetter,rowNumber, userId, 0))
         return -1;
 
     char newQuery[MAX_QUERY_LENGTH];
@@ -229,10 +229,23 @@ static int addNewFlightSeats(dataBaseADT db, char * flightNumber)
     return result;
 }
 
-static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId)
+static int checkFlightReservation(dataBaseADT db, char * flightNumber, char colLetter, int rowNumber, char * userId, int mode)
 {
     if(db == NULL || flightNumber == NULL || userId == NULL ||colLetter < COL_MIN_LETTER || colLetter >= (COL_MIN_LETTER + COL_NUMBER) || rowNumber <= 0 || rowNumber > ROW_NUMBER)
         return 0;
-    return 1;
+    
+    char query[MAX_QUERY_LENGTH];
+    if(mode)
+        sprintf(query, "SELECT COUNT(*) FROM reservation WHERE flightNumber = '%s' AND colLetter = '%c' AND rowNumber = %d;", flightNumber, colLetter, rowNumber); 
+    else   
+        sprintf(query, "SELECT COUNT(*) FROM reservation WHERE flightNumber = '%s' AND userId = '%s' AND colLetter = '%c' AND rowNumber = %d;", flightNumber, userId, colLetter, rowNumber); 
+    
+    prepareStatement(db, query);
+    int rowQty = 0;
+    stepStatement(db);
+    getIntFromColumn(db, 0, &rowQty);
+    finalizeStatement(db);
+
+    return rowQty != mode;
 }
 
