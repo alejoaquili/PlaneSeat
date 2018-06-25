@@ -26,7 +26,6 @@ int applyToGetFlights(int clientSocketFd)
     char * string = readStringToDeserialize(clientSocketFd);
 
     flights = deserializeToFlights(string, &qty);
-	printf("QTY:%d\n",qty);
 	printf("This is the list of flights: \n");
 	for(int i = 0; i < qty; i++)
 		printf("\tFlight Number: %s, Origin: %s, Destination: %s\n", flights[i].flightNumber, flights[i].origin, flights[i].destination);
